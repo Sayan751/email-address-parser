@@ -1,0 +1,12 @@
+
+a\\ud83c
+\"test
+test.
+te..st
+<test
+test>
+.test
+\"test\\ t\"est\"
+\"test t\"est\"
+te\";\"st
+te;st

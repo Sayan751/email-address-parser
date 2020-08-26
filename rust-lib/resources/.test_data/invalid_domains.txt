@@ -1,0 +1,9 @@
+
+example.com>
+test..com
+.test.com
+test.com.
+google..
+.com
+google-.com
+-google-.com

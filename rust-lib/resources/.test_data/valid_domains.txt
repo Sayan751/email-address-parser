@@ -1,0 +1,8 @@
+google.com
+m.maselkowski.pl
+xn--masekowski-d0b.pl
+[127.0.0.0]
+[192.168.0.1]
+[1.2.3.4]
+[0.0.0.1]
+[255.255.255.254]
