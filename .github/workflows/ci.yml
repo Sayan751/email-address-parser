@@ -14,26 +14,13 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  check-out:
-    
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v2
-
-  install-wasm-bindgen:
-    
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Install
-      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
   build-rust:
 
     runs-on: ubuntu-latest
     
     steps:
+    - uses: actions/checkout@v2
     - name: Install
       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
     - name: Build Rust
@@ -42,15 +29,14 @@ jobs:
       run: cargo test --verbose
     - name: Build docs
       run: cargo doc --no-deps
-
-    needs: [check-out]
   
   build-wasm:
 
     runs-on: ubuntu-latest
     
     steps:
+    - uses: actions/checkout@v2
+    - name: Install wasm-bindgen
+      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
     - name: test WASM
       run: wasm-pack test --node
-
-    needs: [check-out, install-wasm-bindgen]

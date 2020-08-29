@@ -32,3 +32,7 @@ TODO
 ```shell
 cargo doc --no-deps --open
 ```
+
+TODO
+[] Add JS docu
+[] Add github action to set up crates.io as well ass npm publishing
