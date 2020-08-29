@@ -1,5 +1,9 @@
 name: Rust
 
+defaults:
+  run:
+    working-directory: rust-lib
+
 on:
   push:
     branches: [ master ]
