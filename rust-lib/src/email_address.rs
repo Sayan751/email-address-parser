@@ -2,17 +2,20 @@ extern crate pest;
 extern crate pest_derive;
 use pest::Parser;
 use std::fmt;
+use wasm_bindgen::prelude::*;
 
 #[derive(Parser)]
 #[grammar = "rfc5322.pest"]
 struct RFC5322;
 
+#[wasm_bindgen]
 #[derive(Debug)]
 pub struct EmailAddress {
   local_part: String,
   domain: String,
 }
 
+#[wasm_bindgen]
 impl EmailAddress {
   pub fn new(local_part: &str, domain: &str) -> EmailAddress {
     EmailAddress {
@@ -43,13 +46,21 @@ impl EmailAddress {
         } else {
           match RFC5322::parse(Rule::address_single_obs, input) {
             Ok(parsed) => instantiate(parsed),
-            Err(_) => None
+            Err(_) => None,
           }
         }
       }
     }
   }
+  pub fn local_part(&self) -> String {
+    self.local_part.clone()
+  }
+  pub fn domain_bytes(&self) -> String {
+    self.domain.clone()
+  }
+}
 
+impl EmailAddress {
   pub fn get_local_part(&self) -> &str {
     self.local_part.as_str()
   }
