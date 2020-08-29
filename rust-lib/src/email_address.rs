@@ -55,7 +55,7 @@ impl EmailAddress {
   pub fn local_part(&self) -> String {
     self.local_part.clone()
   }
-  pub fn domain_bytes(&self) -> String {
+  pub fn domain(&self) -> String {
     self.domain.clone()
   }
 }
