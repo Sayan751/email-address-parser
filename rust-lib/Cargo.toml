@@ -22,7 +22,7 @@ wasm-bindgen = "^0.2.67"
 quick-xml = "^0.18.1"
 
 [dev-dependencies]
-wasm-bindgen-test = "^0.2.0"
+wasm-bindgen-test = "^0.3.17"
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ["-Oz", "--enable-mutable-globals"]

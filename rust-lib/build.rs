@@ -8,7 +8,6 @@ use std::path;
 fn main() {
   // cargo env var reference: https://doc.rust-lang.org/cargo/reference/environment-variables.html
   let root = env::var_os("CARGO_MANIFEST_DIR").unwrap();
-  // let out_dir = env::var_os("OUT_DIR").unwrap();
   let test_file_path = path::Path::new(&root)
     .join("src")
     .join("generated_tests.rs");
@@ -40,8 +39,10 @@ macro_rules! generate_test_positive_parsing_test {
     #[cfg(test)]
     mod parses_valid_email_address {
       use crate::email_address::*;
+      use wasm_bindgen_test::*;
       $(
         #[test]
+        #[wasm_bindgen_test]
         fn $case() {
           let address_str = concat!($local_part, \"@\", $domain);
           let address = EmailAddress::parse(&address_str, Some(true));
@@ -82,8 +83,10 @@ macro_rules! generate_test_negative_parsing_test {
     #[cfg(test)]
     mod does_not_parse_invalid_email_address {
       use crate::email_address::*;
+      use wasm_bindgen_test::*;
       $(
         #[test]
+        #[wasm_bindgen_test]
         fn $case() {
           let address_str = concat!($local_part, \"@\", $domain);
           assert_eq!(EmailAddress::parse(&address_str, Some(true)).is_none(), true, \"expected {} not to be parsed\", address_str);
@@ -140,8 +143,10 @@ macro_rules! generate_is_email_test {
     #[cfg(test)]
     mod is_email_tests {
       use crate::email_address::*;
+      use wasm_bindgen_test::*;
       $(
         #[test]
+        #[wasm_bindgen_test]
         fn $case() {
           let email = EmailAddress::parse(&$email, None);
           assert_eq!(email.is_some(), $is_email, \"expected {} to be valid: {}\", $email, $is_email);

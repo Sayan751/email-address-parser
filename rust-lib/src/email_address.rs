@@ -78,8 +78,10 @@ impl fmt::Display for EmailAddress {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use wasm_bindgen_test::*;
 
   #[test]
+  #[wasm_bindgen_test]
   fn email_address_instantiation_works() {
     let address = EmailAddress::new("foo", "bar.com");
     assert_eq!(address.get_local_part(), "foo");
@@ -88,6 +90,7 @@ mod tests {
   }
 
   #[test]
+  #[wasm_bindgen_test]
   fn domain_rule_does_not_parse_dash_google_dot_com() {
     let address = RFC5322::parse(Rule::domain_complete, "-google.com");
     println!("{:#?}", address);
@@ -95,6 +98,7 @@ mod tests {
   }
 
   #[test]
+  #[wasm_bindgen_test]
   fn domain_rule_does_not_parse_dash_google_dot_com_obs() {
     let address = RFC5322::parse(Rule::domain_obs, "-google.com");
     println!("{:#?}", address);
@@ -102,6 +106,7 @@ mod tests {
   }
 
   #[test]
+  #[wasm_bindgen_test]
   fn domain_rule_does_not_parse_dash_google_dash_dot_com() {
     let address = RFC5322::parse(Rule::domain_complete, "-google-.com");
     println!("{:#?}", address);
@@ -109,6 +114,7 @@ mod tests {
   }
 
   #[test]
+  #[wasm_bindgen_test]
   fn domain_rule_parses_google_dash_dot_com() {
     let address = RFC5322::parse(Rule::domain_complete, "google-.com");
     println!("{:#?}", address);
@@ -116,6 +122,7 @@ mod tests {
   }
 
   #[test]
+  #[wasm_bindgen_test]
   fn domain_complete_punycode_domain() {
     let actual = RFC5322::parse(Rule::domain_complete, "xn--masekowski-d0b.pl");
     println!("{:#?}", actual);
@@ -123,6 +130,7 @@ mod tests {
   }
 
   #[test]
+  #[wasm_bindgen_test]
   fn can_parse_deprecated_local_part() {
     let actual = RFC5322::parse(Rule::local_part_obs, "\"test\".\"test\"");
     println!("{:#?}", actual);
@@ -130,6 +138,7 @@ mod tests {
   }
 
   #[test]
+  #[wasm_bindgen_test]
   fn can_parse_email_with_deprecated_local_part() {
     let actual = RFC5322::parse(Rule::address_single_obs, "\"test\".\"test\"@iana.org");
     println!("{:#?}", actual);
@@ -137,6 +146,7 @@ mod tests {
   }
 
   #[test]
+  #[wasm_bindgen_test]
   fn can_parse_domain_with_space() {
     println!("{:#?}", RFC5322::parse(Rule::domain_obs, " iana .com"));
     let actual = EmailAddress::parse("test@ iana .com", None);
@@ -153,6 +163,7 @@ mod tests {
   }
 
   #[test]
+  #[wasm_bindgen_test]
   fn can_parse_email_with_crlf() {
     let email = "\u{0d}\u{0a} test@iana.org";
     let actual = EmailAddress::parse(&email, None);
@@ -161,6 +172,7 @@ mod tests {
   }
 
   #[test]
+  #[wasm_bindgen_test]
   fn can_parse_local_part_with_space() {
     let actual = RFC5322::parse(Rule::address_single_obs, "test . test@iana.org");
     println!("{:#?}", actual);
@@ -168,6 +180,7 @@ mod tests {
   }
 
   #[test]
+  #[wasm_bindgen_test]
   fn can_parse_domain_with_bel() {
     let actual = RFC5322::parse(Rule::domain_literal, "[RFC-5322-\u{07}-domain-literal]");
     println!("{:#?}", actual);
