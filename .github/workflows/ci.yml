@@ -17,7 +17,7 @@ jobs:
 
   build-rust:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     
     steps:
     - uses: actions/checkout@v2
@@ -32,7 +32,7 @@ jobs:
   
   build-wasm:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     
     steps:
     - uses: actions/checkout@v2
