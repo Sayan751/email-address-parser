@@ -8,6 +8,20 @@ use wasm_bindgen::prelude::*;
 #[grammar = "rfc5322.pest"]
 struct RFC5322;
 
+/// Email address struct.
+/// 
+/// # Examples
+/// ```
+/// use email_address_parser::email_address::EmailAddress;
+/// 
+/// assert!(EmailAddress::parse("foo@-bar.com", Some(true)).is_none());
+/// let email = EmailAddress::parse("foo@bar.com", Some(true));
+/// assert!(email.is_some());
+/// let email = email.unwrap();
+/// assert_eq!(email.get_local_part(), "foo");
+/// assert_eq!(email.get_domain(), "bar.com");
+/// assert_eq!(format!("{}", email), "foo@bar.com");
+/// ```
 #[wasm_bindgen]
 #[derive(Debug)]
 pub struct EmailAddress {

@@ -6,7 +6,7 @@ macro_rules! generate_test_positive_parsing_test {
   ($($case:ident: ($local_part:literal, $domain:literal),)+) => {
     #[cfg(test)]
     mod parses_valid_email_address {
-      use crate::email_address::*;
+      use email_address_parser::email_address::EmailAddress;
       use wasm_bindgen_test::*;
       $(
         #[test]
@@ -96,7 +96,7 @@ macro_rules! generate_test_negative_parsing_test {
   ($($case:ident: ($local_part:literal, $domain:literal),)+) => {
     #[cfg(test)]
     mod does_not_parse_invalid_email_address {
-      use crate::email_address::*;
+      use email_address_parser::email_address::EmailAddress;
       use wasm_bindgen_test::*;
       $(
         #[test]
@@ -393,7 +393,7 @@ macro_rules! generate_is_email_test {
   ($($case:ident: ($email:literal, $is_email:literal),)+) => {
     #[cfg(test)]
     mod is_email_tests {
-      use crate::email_address::*;
+      use email_address_parser::email_address::EmailAddress;
       use wasm_bindgen_test::*;
       $(
         #[test]
