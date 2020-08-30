@@ -1,5 +1,8 @@
 {
   "name": "@sparser/email-address-parser",
+  "description": "An RFC 5322 compliant email address parser.",
+  "version": "0.2.0-rc4",
+  "license": "MIT",
   "author": {
     "name": "Sayan751"
   },
@@ -9,9 +12,6 @@
     "wasm",
     "rfc 5322"
   ],
-  "description": "An RFC 5322 compliant email address parser.",
-  "version": "0.1.0",
-  "license": "MIT",
   "private": false,
   "repository": {
     "type": "git",

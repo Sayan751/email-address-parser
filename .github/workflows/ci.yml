@@ -70,7 +70,7 @@ jobs:
 
     # publish to npm
     - name: publish to npm
-      run: npm publish
+      run: npm publish --access public
       working-directory: ./npm-pkg
       if: startsWith(github.ref, 'refs/tags/v')
       env:
