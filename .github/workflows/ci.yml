@@ -33,7 +33,3 @@ jobs:
       run: wasm-pack test --headless --chrome
     - name: test WASM Firefox
       run: wasm-pack test --headless --firefox
-    - name: test WASM Safari
-      run: wasm-pack test --headless --safari
-    # - name: test WASM node
-    #   run: wasm-pack test --node
