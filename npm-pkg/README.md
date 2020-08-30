@@ -3,6 +3,12 @@
 This is a WASM wrapper over the rust crate [email-address-parser](TODO) which provides an RFC 5322 compliant implementation of email address parser.
 The code for this npm package is generated with with [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen).
 
+## Install
+
+```shell
+npm i @sparser/email-address-parser
+```
+
 ## Usage
 
 ### Node.js
