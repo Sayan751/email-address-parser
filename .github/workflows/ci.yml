@@ -46,5 +46,8 @@ jobs:
     - name: cleanup dist
       run: rm ../npm-pkg/dist/bundler/.gitignore ../npm-pkg/dist/bundler/email_address_parser.d.ts ../npm-pkg/dist/bundler/LICENSE ../npm-pkg/dist/bundler/package.json  ../npm-pkg/dist/bundler/README.md ../npm-pkg/dist/cjs/.gitignore ../npm-pkg/dist/cjs/email_address_parser.d.ts ../npm-pkg/dist/cjs/LICENSE ../npm-pkg/dist/cjs/package.json  ../npm-pkg/dist/cjs/README.md
 
+    - name: npm ci
+      run: npm ci --prefix ../npm-pkg
+
     - name: test npm package
       run: npm test --prefix ../npm-pkg
