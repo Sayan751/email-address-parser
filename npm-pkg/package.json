@@ -18,16 +18,15 @@
     "url": "https://github.com/Sayan751/email-address-parser"
   },
   "files": [
-    "bundler/email_address_parser_bg.wasm",
-    "bundler/email_address_parser.js",
-    "bundler/email_address_parser_bg.js",
-    "bundler/email_address_parser.d.ts",
-    "cjs/email_address_parser_bg.wasm",
-    "cjs/email_address_parser.js",
-    "cjs/email_address_parser.d.ts"
+    "dist/bundler/email_address_parser_bg.wasm",
+    "dist/bundler/email_address_parser.js",
+    "dist/bundler/email_address_parser_bg.js",
+    "dist/cjs/email_address_parser_bg.wasm",
+    "dist/cjs/email_address_parser.js",
+    "email_address_parser.d.ts"
   ],
-  "module": "bundler/email_address_parser.js",
-  "main": "cjs/email_address_parser.js",
-  "types": "cjs/email_address_parser.d.ts",
+  "module": "dist/bundler/email_address_parser.js",
+  "main": "dist/cjs/email_address_parser.js",
+  "types": "email_address_parser.d.ts",
   "sideEffects": false
 }

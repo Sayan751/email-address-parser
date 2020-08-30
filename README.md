@@ -1,38 +1,4 @@
-# An RFC 5322 compliant email address parser
+# Email Address Parser
 
-TODO
-
-## Development
-
-### Build
-- Only Rust
-  ```shell
-  cargo build
-  ```
-- WASM
-  ```shell
-  wasm-pack build --out-dir pkg/bundler
-  wasm-pack build --target nodejs --out-dir pkg/cjs
-  ```
-
-### Test
-
-- Only Rust
-  ```shell
-  cargo test
-  ```
-
-- WASM
-  ```shell
-  wasm-pack test --node
-  ```
-
-### Doc generation
-
-```shell
-cargo doc --no-deps --open
-```
-
-TODO
-[] Add JS docu
-[] Add github action to set up crates.io as well ass npm publishing
+An RFC 5322 compliant email address parser made with [pest parser](https://github.com/pest-parser/pest).
+This repository contains a [rust crate](./rust-lib/README.md) as well as a wrapper [WebAssembly module](./npm-pkg/README.md).

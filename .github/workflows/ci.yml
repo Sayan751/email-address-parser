@@ -21,15 +21,21 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
+    
     - name: Install
       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+    
     - name: Build Rust
       run: cargo build --verbose --release
+    
     - name: Run tests
       run: cargo test --verbose
+    
     - name: Build docs
       run: cargo doc --no-deps
+    
     - name: test WASM Chrome
       run: wasm-pack test --headless --chrome
+    
     - name: test WASM Firefox
       run: wasm-pack test --headless --firefox
