@@ -1,7 +1,7 @@
 {
   "name": "@sparser/email-address-parser",
   "description": "An RFC 5322 compliant email address parser.",
-  "version": "0.2.0-rc5",
+  "version": "0.2.0-rc6",
   "license": "MIT",
   "author": {
     "name": "Sayan751"
@@ -15,7 +15,7 @@
   "private": false,
   "repository": {
     "type": "git",
-    "url": "https://github.com/Sayan751/email-address-parser/npm-pkg"
+    "url": "https://github.com/Sayan751/email-address-parser"
   },
   "files": [
     "dist/bundler/email_address_parser_bg.wasm",
