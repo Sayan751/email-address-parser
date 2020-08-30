@@ -1,7 +1,7 @@
 {
   "name": "@sparser/email-address-parser",
   "description": "An RFC 5322 compliant email address parser.",
-  "version": "0.2.0-rc4",
+  "version": "0.2.0-rc5",
   "license": "MIT",
   "author": {
     "name": "Sayan751"
