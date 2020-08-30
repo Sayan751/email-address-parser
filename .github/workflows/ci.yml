@@ -5,6 +5,7 @@ defaults:
     working-directory: rust-lib
 
 on:
+  workflow_dispatch
   push:
     branches: [ master ]
   pull_request:
