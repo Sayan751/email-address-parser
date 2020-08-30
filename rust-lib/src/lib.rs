@@ -19,6 +19,8 @@
 //! 
 //! To parse an email address with obsolete parts (as per RFC 5322) in it, pass `None` as the second argument to have non-strict parsing.
 //! ```
+//! use email_address_parser::EmailAddress;
+//! 
 //! let email = EmailAddress::parse("\u{0d}\u{0a} \u{0d}\u{0a} test@iana.org", None);
 //! assert!(email.is_some());
 //! ```
