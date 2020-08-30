@@ -8,8 +8,8 @@ use std::path;
 fn main() {
   // cargo env var reference: https://doc.rust-lang.org/cargo/reference/environment-variables.html
   let root = env::var_os("CARGO_MANIFEST_DIR").unwrap();
-  let test_file_path = path::Path::new(&root)
-    .join("tests")
+  let out_dir = env::var_os("OUT_DIR").unwrap();
+  let test_file_path = path::Path::new(&out_dir)
     .join("generated_tests.rs");
   let mut test_file = fs::File::create(&test_file_path).unwrap();
   let test_data_root = path::Path::new(&root).join("resources").join(".test_data");

@@ -1,11 +1,14 @@
 [package]
 name = "email-address-parser"
-version = "0.2.0-rc9"
+version = "0.2.0-rc10"
 authors = ["Sayan751"]
 edition = "2018"
 description = "An RFC 5322 compliant email address parser."
-repository = "https://github.com/Sayan751/email-address-parser"
 license = "MIT"
+repository = "https://github.com/Sayan751/email-address-parser"
+homepage = "https://github.com/Sayan751/email-address-parser"
+readme = "README.md"
+keywords = ["email-address", "parser", "rfc 5322"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
