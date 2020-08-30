@@ -9,11 +9,11 @@ use wasm_bindgen::prelude::*;
 struct RFC5322;
 
 /// Email address struct.
-/// 
+///
 /// # Examples
 /// ```
 /// use email_address_parser::email_address::EmailAddress;
-/// 
+///
 /// assert!(EmailAddress::parse("foo@-bar.com", Some(true)).is_none());
 /// let email = EmailAddress::parse("foo@bar.com", Some(true));
 /// assert!(email.is_some());
@@ -93,6 +93,7 @@ impl fmt::Display for EmailAddress {
 mod tests {
   use super::*;
   use wasm_bindgen_test::*;
+  wasm_bindgen_test_configure!(run_in_browser);
 
   #[test]
   #[wasm_bindgen_test]

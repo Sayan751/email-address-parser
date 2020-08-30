@@ -15,7 +15,7 @@ env:
 
 jobs:
 
-  build-rust:
+  build:
 
     runs-on: windows-latest
     
@@ -29,14 +29,5 @@ jobs:
       run: cargo test --verbose
     - name: Build docs
       run: cargo doc --no-deps
-  
-  build-wasm:
-
-    runs-on: windows-latest
-    
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install wasm-bindgen
-      run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
     - name: test WASM
-      run: wasm-pack test --node
+      run: wasm-pack test --headless --chrome
