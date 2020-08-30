@@ -8,6 +8,7 @@ macro_rules! generate_test_positive_parsing_test {
     mod parses_valid_email_address {
       use email_address_parser::email_address::EmailAddress;
       use wasm_bindgen_test::*;
+      wasm_bindgen_test_configure!(run_in_browser);
       $(
         #[test]
         #[wasm_bindgen_test]
@@ -98,6 +99,7 @@ macro_rules! generate_test_negative_parsing_test {
     mod does_not_parse_invalid_email_address {
       use email_address_parser::email_address::EmailAddress;
       use wasm_bindgen_test::*;
+      wasm_bindgen_test_configure!(run_in_browser);
       $(
         #[test]
         #[wasm_bindgen_test]
@@ -395,6 +397,7 @@ macro_rules! generate_is_email_test {
     mod is_email_tests {
       use email_address_parser::email_address::EmailAddress;
       use wasm_bindgen_test::*;
+      wasm_bindgen_test_configure!(run_in_browser);
       $(
         #[test]
         #[wasm_bindgen_test]
