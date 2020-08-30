@@ -17,7 +17,7 @@ jobs:
 
   build:
 
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v2
@@ -39,3 +39,15 @@ jobs:
     
     - name: test WASM Firefox
       run: wasm-pack test --headless --firefox
+    
+    - name: build WASM bundler
+      run: wasm-pack build --out-dir ../npm-pkg/dist/bundler
+    
+    - name: build WASM cjs
+      run: wasm-pack build --target nodejs --out-dir ../npm-pkg/dist/cjs
+    
+    - name: cleanup dist
+      run: rm ../npm-pkg/dist/bundler/.gitignore ../npm-pkg/dist/bundler/email_address_parser.d.ts ../npm-pkg/dist/bundler/LICENSE ../npm-pkg/dist/bundler/package.json  ../npm-pkg/dist/bundler/README.md ../npm-pkg/dist/cjs/.gitignore ../npm-pkg/dist/cjs/email_address_parser.d.ts ../npm-pkg/dist/cjs/LICENSE ../npm-pkg/dist/cjs/package.json  ../npm-pkg/dist/cjs/README.md
+
+    - name: test npm package
+      run: npm test --prefix ../npm-pkg

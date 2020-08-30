@@ -11,3 +11,4 @@ target/
 
 *.code-workspace
 .ignored/**/*
+node_modules
