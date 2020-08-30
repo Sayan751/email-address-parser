@@ -1,6 +1,6 @@
 [package]
 name = "email-address-parser"
-version = "0.3.0-rc1"
+version = "0.3.0-rc2"
 authors = ["Sayan751"]
 edition = "2018"
 description = "An RFC 5322 compliant email address parser."
