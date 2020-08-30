@@ -7,7 +7,7 @@ defaults:
 on:
   workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ master, tags/* ]
   pull_request:
     branches: [ master ]
 
@@ -22,6 +22,9 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
+    
+    - name: echo github ref
+      run: echo "${{ github.ref }}"
     
     - name: Install
       run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
@@ -58,9 +61,6 @@ jobs:
     - name: test npm package
       run: npm test
       working-directory: ./npm-pkg
-    
-    - name: echo github ref
-      run: echo "${{ github.ref }}"
 
     # publish to crates.io
     - name: crates.io publish
