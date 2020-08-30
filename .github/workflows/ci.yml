@@ -46,8 +46,27 @@ jobs:
     - name: cleanup dist
       run: rm ../npm-pkg/dist/bundler/.gitignore ../npm-pkg/dist/bundler/email_address_parser.d.ts ../npm-pkg/dist/bundler/LICENSE ../npm-pkg/dist/bundler/package.json  ../npm-pkg/dist/bundler/README.md ../npm-pkg/dist/cjs/.gitignore ../npm-pkg/dist/cjs/email_address_parser.d.ts ../npm-pkg/dist/cjs/LICENSE ../npm-pkg/dist/cjs/package.json  ../npm-pkg/dist/cjs/README.md
 
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '12.x'
+
     - name: npm ci
-      run: npm ci --prefix ../npm-pkg
+      run: npm ci
+      working-directory: ./npm-pkg
 
     - name: test npm package
-      run: npm test --prefix ../npm-pkg
+      run: npm test
+      working-directory: ./npm-pkg
+    
+    # publish to crates.io
+    - name: crates.io publish
+      run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
+      if: startsWith(github.ref, 'refs/tags/v')
+
+    # publish to npm
+    - name: publish to npm
+      run: npm publish
+      working-directory: ./npm-pkg
+      if: startsWith(github.ref, 'refs/tags/v')
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
