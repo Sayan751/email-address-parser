@@ -30,6 +30,7 @@ cargo doc --no-deps --open
 ### Publishing checklist
 
 - [ ] Update crate version and commit.
+- [ ] Generate changelog with `npx conventional-changelog-cli -i CHANGELOG.md -s`, and edit accordingly the version.
 - [ ] Add git tag with `git tag -a v{TAG} -m "{MSG}"`.
 - [ ] Push tag `git push --follow-tags`.
 
