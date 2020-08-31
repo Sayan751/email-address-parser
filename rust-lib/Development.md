@@ -28,6 +28,8 @@ cargo doc --no-deps --open
 ```
 
 ### Publishing checklist
+
 [] Update crate version and commit.
 [] Add git tag with `git tag -a v{TAG} -m "{MSG}"`.
 [] Push tag `git push --follow-tags`.
+
