@@ -9,8 +9,7 @@ fn main() {
   // cargo env var reference: https://doc.rust-lang.org/cargo/reference/environment-variables.html
   let root = env::var_os("CARGO_MANIFEST_DIR").unwrap();
   let out_dir = env::var_os("OUT_DIR").unwrap();
-  let test_file_path = path::Path::new(&out_dir)
-    .join("generated_tests.rs");
+  let test_file_path = path::Path::new(&out_dir).join("generated_tests.rs");
   let mut test_file = fs::File::create(&test_file_path).unwrap();
   let test_data_root = path::Path::new(&root).join("resources").join(".test_data");
 
@@ -26,14 +25,52 @@ fn main() {
   let valid_domains: Vec<String> = read_test_data("valid_domains.txt");
   let invalid_local_parts: Vec<String> = read_test_data("invalid_local_parts.txt");
   let invalid_domains: Vec<String> = read_test_data("invalid_domains.txt");
-  let is_email_xml = fs::read_to_string(test_data_root.join("isemail_tests.xml")).unwrap();
 
-  let mut content = String::from(
+  let mut content = String::new();
+  create_valid_parsing_tests(&mut content, &valid_local_parts, &valid_domains);
+  create_invalid_parsing_tests(
+    &mut content,
+    &valid_local_parts,
+    &valid_domains,
+    &invalid_local_parts,
+    &invalid_domains,
+  );
+  create_is_email_tests(&mut content, &test_data_root);
+
+  write!(test_file, "{}", content.trim()).unwrap();
+  println!("cargo:rerun-if-changed=build.rs");
+  println!("cargo:rerun-if-changed=resources/.test_data/valid_local_parts.txt");
+  println!("cargo:rerun-if-changed=resources/.test_data/valid_domains.txt");
+  println!("cargo:rerun-if-changed=resources/.test_data/invalid_local_parts.txt");
+  println!("cargo:rerun-if-changed=resources/.test_data/invalid_domains.txt");
+}
+
+fn create_case(
+  content: &mut String,
+  case_index: &mut i32,
+  local_parts: &Vec<String>,
+  domains: &Vec<String>,
+) {
+  for local_part in local_parts {
+    for domain in domains {
+      *case_index += 1;
+      content.push_str(&format!(
+        "  {}: (\"{}\", \"{}\"),\n",
+        &format!("case{}", case_index),
+        local_part,
+        domain
+      ));
+    }
+  }
+}
+
+fn create_valid_parsing_tests(
+  content: &mut String,
+  local_parts: &Vec<String>,
+  domains: &Vec<String>,
+) {
+  content.push_str(
     "
-/**
- * This is a generated file by build.rs.
- * Do not edit manually.
- */
 macro_rules! generate_test_positive_parsing_test {
   ($($case:ident: ($local_part:literal, $domain:literal),)+) => {
     #[cfg(test)]
@@ -61,22 +98,18 @@ macro_rules! generate_test_positive_parsing_test {
 generate_test_positive_parsing_test!{
 ",
   );
-
-  let mut i = 0;
-  for local_part in &valid_local_parts {
-    for domain in &valid_domains {
-      i += 1;
-      content.push_str(&format!(
-        "  {}: (\"{}\", \"{}\"),\n",
-        &format!("case{}", i),
-        local_part,
-        domain
-      ));
-    }
-  }
+  create_case(content, &mut 0, local_parts, domains);
 
   content.push_str("}\n");
+}
 
+fn create_invalid_parsing_tests(
+  content: &mut String,
+  valid_local_parts: &Vec<String>,
+  valid_domains: &Vec<String>,
+  invalid_local_parts: &Vec<String>,
+  invalid_domains: &Vec<String>,
+) {
   content.push_str(
     "
 macro_rules! generate_test_negative_parsing_test {
@@ -102,48 +135,22 @@ generate_test_negative_parsing_test!{
 ",
   );
   let mut i = 0;
-  for local_part in &invalid_local_parts {
-    for domain in &valid_domains {
-      i += 1;
-      content.push_str(&format!(
-        "  {}: (\"{}\", \"{}\"),\n",
-        &format!("case{}", i),
-        local_part,
-        domain
-      ));
-    }
-  }
-  for local_part in &valid_local_parts {
-    for domain in &invalid_domains {
-      i += 1;
-      content.push_str(&format!(
-        "  {}: (\"{}\", \"{}\"),\n",
-        &format!("case{}", i),
-        local_part,
-        domain
-      ));
-    }
-  }
-  for local_part in &invalid_local_parts {
-    for domain in &invalid_domains {
-      i += 1;
-      content.push_str(&format!(
-        "  {}: (\"{}\", \"{}\"),\n",
-        &format!("case{}", i),
-        local_part,
-        domain
-      ));
-    }
-  }
+  create_case(content, &mut i, invalid_local_parts, valid_domains);
+  create_case(content, &mut i, valid_local_parts, invalid_domains);
+  create_case(content, &mut i, invalid_local_parts, invalid_domains);
 
   content.push_str("}\n");
+}
+
+fn create_is_email_tests(content: &mut String, test_data_root: &path::Path) {
+  let is_email_xml = fs::read_to_string(test_data_root.join("isemail_tests.xml")).unwrap();
 
   content.push_str(
     "
 macro_rules! generate_is_email_test {
   ($($case:ident: ($email:literal, $is_email:literal),)+) => {
     #[cfg(test)]
-    mod is_email_tests {
+    mod is_email_parsing_tests {
       use email_address_parser::EmailAddress;
       use wasm_bindgen_test::*;
       wasm_bindgen_test_configure!(run_in_browser);
@@ -237,11 +244,4 @@ generate_is_email_test!{
   }
 
   content.push_str("}");
-
-  write!(test_file, "{}", content.trim()).unwrap();
-  println!("cargo:rerun-if-changed=build.rs");
-  println!("cargo:rerun-if-changed=resources/.test_data/valid_local_parts.txt");
-  println!("cargo:rerun-if-changed=resources/.test_data/valid_domains.txt");
-  println!("cargo:rerun-if-changed=resources/.test_data/invalid_local_parts.txt");
-  println!("cargo:rerun-if-changed=resources/.test_data/invalid_domains.txt");
 }
