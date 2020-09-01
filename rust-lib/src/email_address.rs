@@ -33,45 +33,64 @@ pub struct EmailAddress {
 impl EmailAddress {
   #![warn(missing_docs)]
   #![warn(missing_doc_code_examples)]
-  // TODO: validate local part and domain
 
-  /// Instantiates a new `EmailAddress`.
-  /// 
+  /// Instantiates a new `Some(EmailAddress)` for a valid local part and domain.
+  /// Returns `None` otherwise.
+  /// Ideally a `Result<EmailAddress, std::error::Error>` should have been returned instead of `Option<EmailAddress>`.
+  /// However, unfortunately it does not seems to be working with wasm_bindgen (refer: https://github.com/rustwasm/wasm-bindgen/issues/1017).
+  ///
   /// Accessible from WASM.
-  /// 
-  /// #Examples
+  ///
+  /// # Examples
   /// ```
   /// use email_address_parser::EmailAddress;
-  /// 
-  /// let email = EmailAddress::new("foo", "bar.com");
+  ///
+  /// let email = EmailAddress::new("foo", "bar.com", Some(true)).unwrap();
+  ///
+  /// assert_eq!(EmailAddress::new("foo", "-bar.com", Some(true)).is_none(), true);
   /// ```
-  pub fn new(local_part: &str, domain: &str) -> EmailAddress {
-    EmailAddress {
+  pub fn new(local_part: &str, domain: &str, is_strict: Option<bool>) -> Option<EmailAddress> {
+    let is_strict = is_strict.unwrap_or_default();
+
+    if (is_strict && !RFC5322::parse(Rule::local_part_complete, local_part).is_ok())
+      || (!is_strict && !RFC5322::parse(Rule::local_part_complete, local_part).is_ok())
+    {
+      // return Err(format!("Invalid local part '{}'.", local_part));
+      return None;
+    }
+    if (is_strict && !RFC5322::parse(Rule::domain_complete, domain).is_ok())
+      || (!is_strict && !RFC5322::parse(Rule::domain_complete, domain).is_ok())
+    {
+      // return Err(format!("Invalid domain '{}'.", domain));
+      return None;
+    }
+
+    Some(EmailAddress {
       local_part: String::from(local_part),
       domain: String::from(domain),
-    }
+    })
   }
 
   /// Parses a given string as an email address.
-  /// 
+  ///
   /// Accessible from WASM.
-  /// 
+  ///
   /// Returns `Some(EmailAddress)` if the parsing is successful, else `None`.
-  /// #Examples
+  /// # Examples
   /// ```
   /// use email_address_parser::EmailAddress;
-  /// 
+  ///
   /// // strict parsing
   /// let email = EmailAddress::parse("foo@bar.com", Some(true));
   /// assert!(email.is_some());
   /// let email = email.unwrap();
   /// assert_eq!(email.get_local_part(), "foo");
   /// assert_eq!(email.get_domain(), "bar.com");
-  /// 
+  ///
   /// // non-strict parsing
   /// let email = EmailAddress::parse("\u{0d}\u{0a} \u{0d}\u{0a} test@iana.org", None);
   /// assert!(email.is_some());
-  /// 
+  ///
   /// // parsing invalid address
   /// let email = EmailAddress::parse("test@-iana.org", Some(true));
   /// assert!(email.is_none());
@@ -112,17 +131,17 @@ impl EmailAddress {
     }
   }
   /// Returns the local part of the email address.
-  /// 
+  ///
   /// Note that if you are using this library from rust, then consider using the `get_local_part` method instead.
   /// This returns a cloned copy of the local part string, instead of a borrowed `&str`, and exists purely for WASM interoperability.
-  /// 
-  /// #Examples
+  ///
+  /// # Examples
   /// ```
   /// use email_address_parser::EmailAddress;
-  /// 
-  /// let email = EmailAddress::new("foo", "bar.com");
+  ///
+  /// let email = EmailAddress::new("foo", "bar.com", Some(true)).unwrap();
   /// assert_eq!(email.local_part(), "foo");
-  /// 
+  ///
   /// let email = EmailAddress::parse("foo@bar.com", Some(true)).unwrap();
   /// assert_eq!(email.local_part(), "foo");
   /// ```
@@ -131,17 +150,17 @@ impl EmailAddress {
     self.local_part.clone()
   }
   /// Returns the domain of the email address.
-  /// 
+  ///
   /// Note that if you are using this library from rust, then consider using the `get_domain` method instead.
   /// This returns a cloned copy of the domain string, instead of a borrowed `&str`, and exists purely for WASM interoperability.
-  /// 
-  /// #Examples
+  ///
+  /// # Examples
   /// ```
   /// use email_address_parser::EmailAddress;
-  /// 
-  /// let email = EmailAddress::new("foo", "bar.com");
+  ///
+  /// let email = EmailAddress::new("foo", "bar.com", Some(true)).unwrap();
   /// assert_eq!(email.domain(), "bar.com");
-  /// 
+  ///
   /// let email = EmailAddress::parse("foo@bar.com", Some(true)).unwrap();
   /// assert_eq!(email.domain(), "bar.com");
   /// ```
@@ -154,36 +173,34 @@ impl EmailAddress {
 impl EmailAddress {
   #![warn(missing_docs)]
   #![warn(missing_doc_code_examples)]
-  
   /// Returns the local part of the email address.
-  /// 
+  ///
   /// Not accessible from WASM.
-  /// 
-  /// #Examples
+  ///
+  /// # Examples
   /// ```
   /// use email_address_parser::EmailAddress;
-  /// 
-  /// let email = EmailAddress::new("foo", "bar.com");
+  ///
+  /// let email = EmailAddress::new("foo", "bar.com", Some(true)).unwrap();
   /// assert_eq!(email.get_local_part(), "foo");
-  /// 
+  ///
   /// let email = EmailAddress::parse("foo@bar.com", Some(true)).unwrap();
   /// assert_eq!(email.get_local_part(), "foo");
   /// ```
   pub fn get_local_part(&self) -> &str {
     self.local_part.as_str()
   }
-  
   /// Returns the domain of the email address.
-  /// 
+  ///
   /// Not accessible from WASM.
-  /// 
-  /// #Examples
+  ///
+  /// # Examples
   /// ```
   /// use email_address_parser::EmailAddress;
-  /// 
-  /// let email = EmailAddress::new("foo", "bar.com");
+  ///
+  /// let email = EmailAddress::new("foo", "bar.com", Some(true)).unwrap();
   /// assert_eq!(email.get_domain(), "bar.com");
-  /// 
+  ///
   /// let email = EmailAddress::parse("foo@bar.com", Some(true)).unwrap();
   /// assert_eq!(email.get_domain(), "bar.com");
   /// ```
@@ -204,7 +221,7 @@ mod tests {
 
   #[test]
   fn email_address_instantiation_works() {
-    let address = EmailAddress::new("foo", "bar.com");
+    let address = EmailAddress::new("foo", "bar.com", Some(true)).unwrap();
     assert_eq!(address.get_local_part(), "foo");
     assert_eq!(address.get_domain(), "bar.com");
     assert_eq!(format!("{}", address), "foo@bar.com");
@@ -293,6 +310,13 @@ mod tests {
   #[test]
   fn can_parse_domain_with_bel() {
     let actual = RFC5322::parse(Rule::domain_literal, "[RFC-5322-\u{07}-domain-literal]");
+    println!("{:#?}", actual);
+    assert_eq!(actual.is_err(), false);
+  }
+
+  #[test]
+  fn can_parse_local_part_with_space_and_quote() {
+    let actual = RFC5322::parse(Rule::local_part_complete, "\"test test\"");
     println!("{:#?}", actual);
     assert_eq!(actual.is_err(), false);
   }

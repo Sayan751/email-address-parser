@@ -3,6 +3,8 @@ address_spec = { local_part ~ "@" ~ domain }
 
 local_part = @{ dot_atom | quoted_string }
 domain = @{ dot_atom | domain_literal }
+
+local_part_complete = { SOI ~ local_part ~ EOI }
 domain_complete = { SOI ~ domain ~ EOI }
 
 /*------------ lower level rules -------------*/
@@ -55,6 +57,9 @@ address_spec_obs = { local_part_obs ~ "@" ~ domain_obs }
 
 local_part_obs = @{ obs_local_part | dot_atom | quoted_string }
 domain_obs = @{ obs_domain | dot_atom | domain_literal }
+
+obs_local_part_complete = { SOI ~ obs_local_part ~ EOI }
+obs_domain_complete = { SOI ~ obs_domain ~ EOI }
 
 obs_local_part = { FWS* ~ word ~ (CFWS* ~ "." ~ CFWS* ~ word)* }
 obs_domain = { 

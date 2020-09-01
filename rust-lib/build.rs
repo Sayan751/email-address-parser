@@ -35,7 +35,17 @@ fn main() {
     &invalid_local_parts,
     &invalid_domains,
   );
+
   create_is_email_tests(&mut content, &test_data_root);
+
+  create_valid_instantiation_tests(&mut content, &valid_local_parts, &valid_domains);
+  create_invalid_instantiation_tests(
+    &mut content,
+    &valid_local_parts,
+    &valid_domains,
+    &invalid_local_parts,
+    &invalid_domains,
+  );
 
   write!(test_file, "{}", content.trim()).unwrap();
   println!("cargo:rerun-if-changed=build.rs");
@@ -244,4 +254,78 @@ generate_is_email_test!{
   }
 
   content.push_str("}");
+}
+
+fn create_valid_instantiation_tests(
+  content: &mut String,
+  local_parts: &Vec<String>,
+  domains: &Vec<String>,
+) {
+  content.push_str(
+    "
+macro_rules! generate_test_positive_instantiation_test {
+  ($($case:ident: ($local_part:literal, $domain:literal),)+) => {
+    #[cfg(test)]
+    mod instantiates_valid_email_address {
+      use email_address_parser::EmailAddress;
+      use wasm_bindgen_test::*;
+      wasm_bindgen_test_configure!(run_in_browser);
+      $(
+        #[test]
+        #[wasm_bindgen_test]
+        fn $case() {
+          let address = EmailAddress::new(&$local_part, &$domain, None).unwrap();
+          assert_eq!(address.get_local_part(), $local_part);
+          assert_eq!(address.get_domain(), $domain);
+          assert_eq!(format!(\"{}\", address), concat!($local_part, \"@\", $domain), \"incorrect display\");
+        }
+      )*
+    }
+  };
+}
+
+generate_test_positive_instantiation_test!{
+",
+  );
+  create_case(content, &mut 0, local_parts, domains);
+
+  content.push_str("}\n");
+}
+
+fn create_invalid_instantiation_tests(
+  content: &mut String,
+  valid_local_parts: &Vec<String>,
+  valid_domains: &Vec<String>,
+  invalid_local_parts: &Vec<String>,
+  invalid_domains: &Vec<String>,
+) {
+  content.push_str(
+    "
+macro_rules! generate_test_negative_instantiation_test {
+  ($($case:ident: ($local_part:literal, $domain:literal),)+) => {
+    #[cfg(test)]
+    mod panics_instantiating_invalid_email_address {
+      use email_address_parser::EmailAddress;
+      use wasm_bindgen_test::*;
+      wasm_bindgen_test_configure!(run_in_browser);
+      $(
+        #[test]
+        #[wasm_bindgen_test]
+        fn $case() {
+          assert_eq!(EmailAddress::new(&$local_part, &$domain, None).is_none(), true);
+        }
+      )*
+    }
+  };
+}
+
+generate_test_negative_instantiation_test!{
+",
+  );
+  let mut i = 0;
+  create_case(content, &mut i, invalid_local_parts, valid_domains);
+  create_case(content, &mut i, valid_local_parts, invalid_domains);
+  create_case(content, &mut i, invalid_local_parts, invalid_domains);
+
+  content.push_str("}\n");
 }
