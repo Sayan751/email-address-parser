@@ -47,6 +47,14 @@ fn main() {
     &invalid_domains,
   );
 
+  create_is_valid_tests(
+    &mut content,
+    &valid_local_parts,
+    &valid_domains,
+    &invalid_local_parts,
+    &invalid_domains,
+  );
+
   write!(test_file, "{}", content.trim()).unwrap();
   println!("cargo:rerun-if-changed=build.rs");
   println!("cargo:rerun-if-changed=resources/.test_data/valid_local_parts.txt");
@@ -81,11 +89,11 @@ fn create_valid_parsing_tests(
 ) {
   content.push_str(
     "
-macro_rules! generate_test_positive_parsing_test {
+macro_rules! generate_positive_parsing_test {
   ($($case:ident: ($local_part:literal, $domain:literal),)+) => {
     #[cfg(test)]
     mod parses_valid_email_address {
-      use email_address_parser::EmailAddress;
+      use email_address_parser::*;
       use wasm_bindgen_test::*;
       wasm_bindgen_test_configure!(run_in_browser);
       $(
@@ -93,7 +101,7 @@ macro_rules! generate_test_positive_parsing_test {
         #[wasm_bindgen_test]
         fn $case() {
           let address_str = concat!($local_part, \"@\", $domain);
-          let address = EmailAddress::parse(&address_str, Some(true));
+          let address = EmailAddress::parse(&address_str, None);
           assert_eq!(address.is_some(), true, \"expected {} to be parsed\", address_str);
           let address = address.unwrap();
           assert_eq!(address.get_local_part(), $local_part, \"local_part of {}\", address_str);
@@ -105,7 +113,7 @@ macro_rules! generate_test_positive_parsing_test {
   };
 }
 
-generate_test_positive_parsing_test!{
+generate_positive_parsing_test!{
 ",
   );
   create_case(content, &mut 0, local_parts, domains);
@@ -122,11 +130,11 @@ fn create_invalid_parsing_tests(
 ) {
   content.push_str(
     "
-macro_rules! generate_test_negative_parsing_test {
+macro_rules! generate_negative_parsing_test {
   ($($case:ident: ($local_part:literal, $domain:literal),)+) => {
     #[cfg(test)]
     mod does_not_parse_invalid_email_address {
-      use email_address_parser::EmailAddress;
+      use email_address_parser::*;
       use wasm_bindgen_test::*;
       wasm_bindgen_test_configure!(run_in_browser);
       $(
@@ -134,14 +142,14 @@ macro_rules! generate_test_negative_parsing_test {
         #[wasm_bindgen_test]
         fn $case() {
           let address_str = concat!($local_part, \"@\", $domain);
-          assert_eq!(EmailAddress::parse(&address_str, Some(true)).is_none(), true, \"expected {} not to be parsed\", address_str);
+          assert_eq!(EmailAddress::parse(&address_str, None).is_none(), true, \"expected {} not to be parsed\", address_str);
         }
       )*
     }
   };
 }
 
-generate_test_negative_parsing_test!{
+generate_negative_parsing_test!{
 ",
   );
   let mut i = 0;
@@ -161,14 +169,14 @@ macro_rules! generate_is_email_test {
   ($($case:ident: ($email:literal, $is_email:literal),)+) => {
     #[cfg(test)]
     mod is_email_parsing_tests {
-      use email_address_parser::EmailAddress;
+      use email_address_parser::*;
       use wasm_bindgen_test::*;
       wasm_bindgen_test_configure!(run_in_browser);
       $(
         #[test]
         #[wasm_bindgen_test]
         fn $case() {
-          let email = EmailAddress::parse(&$email, None);
+          let email = EmailAddress::parse(&$email, Some(ParsingOptions{is_lax: true, supports_unicode: false}));
           assert_eq!(email.is_some(), $is_email, \"expected {} to be valid: {}\", $email, $is_email);
           if $is_email {
             assert_eq!(
@@ -263,18 +271,18 @@ fn create_valid_instantiation_tests(
 ) {
   content.push_str(
     "
-macro_rules! generate_test_positive_instantiation_test {
+macro_rules! generate_positive_instantiation_test {
   ($($case:ident: ($local_part:literal, $domain:literal),)+) => {
     #[cfg(test)]
     mod instantiates_valid_email_address {
-      use email_address_parser::EmailAddress;
+      use email_address_parser::*;
       use wasm_bindgen_test::*;
       wasm_bindgen_test_configure!(run_in_browser);
       $(
         #[test]
         #[wasm_bindgen_test]
         fn $case() {
-          let address = EmailAddress::new(&$local_part, &$domain, None).unwrap();
+          let address = EmailAddress::new(&$local_part, &$domain, Some(ParsingOptions{is_lax: true, supports_unicode: false})).unwrap();
           assert_eq!(address.get_local_part(), $local_part);
           assert_eq!(address.get_domain(), $domain);
           assert_eq!(format!(\"{}\", address), concat!($local_part, \"@\", $domain), \"incorrect display\");
@@ -284,7 +292,7 @@ macro_rules! generate_test_positive_instantiation_test {
   };
 }
 
-generate_test_positive_instantiation_test!{
+generate_positive_instantiation_test!{
 ",
   );
   create_case(content, &mut 0, local_parts, domains);
@@ -301,31 +309,89 @@ fn create_invalid_instantiation_tests(
 ) {
   content.push_str(
     "
-macro_rules! generate_test_negative_instantiation_test {
+macro_rules! generate_negative_instantiation_test {
   ($($case:ident: ($local_part:literal, $domain:literal),)+) => {
     #[cfg(test)]
     mod panics_instantiating_invalid_email_address {
-      use email_address_parser::EmailAddress;
+      use email_address_parser::*;
       use wasm_bindgen_test::*;
       wasm_bindgen_test_configure!(run_in_browser);
       $(
         #[test]
         #[wasm_bindgen_test]
         fn $case() {
-          assert_eq!(EmailAddress::new(&$local_part, &$domain, None).is_none(), true);
+          assert_eq!(EmailAddress::new(&$local_part, &$domain, Some(ParsingOptions{is_lax: true, supports_unicode: false})).is_none(), true);
         }
       )*
     }
   };
 }
 
-generate_test_negative_instantiation_test!{
+generate_negative_instantiation_test!{
 ",
   );
   let mut i = 0;
   create_case(content, &mut i, invalid_local_parts, valid_domains);
   create_case(content, &mut i, valid_local_parts, invalid_domains);
   create_case(content, &mut i, invalid_local_parts, invalid_domains);
+
+  content.push_str("}\n");
+}
+
+fn create_is_valid_tests(
+  content: &mut String,
+  valid_local_parts: &Vec<String>,
+  valid_domains: &Vec<String>,
+  invalid_local_parts: &Vec<String>,
+  invalid_domains: &Vec<String>,
+) {
+  fn create_is_valid_case(
+    content: &mut String,
+    case_index: &mut i32,
+    local_parts: &Vec<String>,
+    domains: &Vec<String>,
+    is_valid: bool,
+  ) {
+    for local_part in local_parts {
+      for domain in domains {
+        *case_index += 1;
+        content.push_str(&format!(
+          "  {}: (\"{}\", {}),\n",
+          &format!("case{}", case_index),
+          format!("{}@{}", local_part, domain),
+          is_valid
+        ));
+      }
+    }
+  }
+  content.push_str(
+    "
+macro_rules! generate_is_valid_test {
+  ($($case:ident: ($address:literal, $is_valid:literal),)+) => {
+    #[cfg(test)]
+    mod is_valid_email_address {
+      use email_address_parser::*;
+      use wasm_bindgen_test::*;
+      wasm_bindgen_test_configure!(run_in_browser);
+      $(
+        #[test]
+        #[wasm_bindgen_test]
+        fn $case() {
+          assert_eq!(EmailAddress::is_valid(&$address, None), $is_valid, \"expected {} not to be valid: {}\", $address, $is_valid);
+        }
+      )*
+    }
+  };
+}
+
+generate_is_valid_test!{
+",
+  );
+  let mut i = 0;
+  create_is_valid_case(content, &mut i, valid_local_parts, valid_domains, true);
+  create_is_valid_case(content, &mut i, invalid_local_parts, valid_domains, false);
+  create_is_valid_case(content, &mut i, valid_local_parts, invalid_domains, false);
+  create_is_valid_case(content, &mut i, invalid_local_parts, invalid_domains, false);
 
   content.push_str("}\n");
 }

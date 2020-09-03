@@ -1,8 +1,24 @@
 extern crate pest;
 extern crate pest_derive;
-use pest::Parser;
+use pest::{iterators::Pairs, Parser};
 use std::fmt;
 use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+#[derive(Debug)]
+pub struct ParsingOptions {
+  pub is_lax: bool,
+  pub supports_unicode: bool,
+}
+
+impl Default for ParsingOptions {
+  fn default() -> Self {
+    ParsingOptions {
+      is_lax: false,
+      supports_unicode: false,
+    }
+  }
+}
 
 #[derive(Parser)]
 #[grammar = "rfc5322.pest"]
@@ -14,8 +30,8 @@ struct RFC5322;
 /// ```
 /// use email_address_parser::EmailAddress;
 ///
-/// assert!(EmailAddress::parse("foo@-bar.com", Some(true)).is_none());
-/// let email = EmailAddress::parse("foo@bar.com", Some(true));
+/// assert!(EmailAddress::parse("foo@-bar.com", None).is_none());
+/// let email = EmailAddress::parse("foo@bar.com", None);
 /// assert!(email.is_some());
 /// let email = email.unwrap();
 /// assert_eq!(email.get_local_part(), "foo");
@@ -45,12 +61,17 @@ impl EmailAddress {
   /// ```
   /// use email_address_parser::EmailAddress;
   ///
-  /// let email = EmailAddress::new("foo", "bar.com", Some(true)).unwrap();
+  /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
   ///
-  /// assert_eq!(EmailAddress::new("foo", "-bar.com", Some(true)).is_none(), true);
+  /// assert_eq!(EmailAddress::new("foo", "-bar.com", None).is_none(), true);
   /// ```
-  pub fn new(local_part: &str, domain: &str, is_strict: Option<bool>) -> Option<EmailAddress> {
-    let is_strict = is_strict.unwrap_or_default();
+  pub fn new(
+    local_part: &str,
+    domain: &str,
+    options: Option<ParsingOptions>,
+  ) -> Option<EmailAddress> {
+    let options = options.unwrap_or_default();
+    let is_strict = !options.is_lax;
 
     if (is_strict && !RFC5322::parse(Rule::local_part_complete, local_part).is_ok())
       || (!is_strict && !RFC5322::parse(Rule::local_part_complete, local_part).is_ok())
@@ -78,30 +99,30 @@ impl EmailAddress {
   /// Returns `Some(EmailAddress)` if the parsing is successful, else `None`.
   /// # Examples
   /// ```
-  /// use email_address_parser::EmailAddress;
+  /// use email_address_parser::*;
   ///
   /// // strict parsing
-  /// let email = EmailAddress::parse("foo@bar.com", Some(true));
+  /// let email = EmailAddress::parse("foo@bar.com", None);
   /// assert!(email.is_some());
   /// let email = email.unwrap();
   /// assert_eq!(email.get_local_part(), "foo");
   /// assert_eq!(email.get_domain(), "bar.com");
   ///
   /// // non-strict parsing
-  /// let email = EmailAddress::parse("\u{0d}\u{0a} \u{0d}\u{0a} test@iana.org", None);
+  /// let email = EmailAddress::parse("\u{0d}\u{0a} \u{0d}\u{0a} test@iana.org", Some(ParsingOptions{is_lax: true, supports_unicode: false}));
   /// assert!(email.is_some());
   ///
   /// // parsing invalid address
-  /// let email = EmailAddress::parse("test@-iana.org", Some(true));
+  /// let email = EmailAddress::parse("test@-iana.org", Some(ParsingOptions{is_lax: true, supports_unicode: false}));
   /// assert!(email.is_none());
-  /// let email = EmailAddress::parse("test@-iana.org", None);
+  /// let email = EmailAddress::parse("test@-iana.org", Some(ParsingOptions{is_lax: true, supports_unicode: false}));
   /// assert!(email.is_none());
-  /// let email = EmailAddress::parse("test", Some(true));
+  /// let email = EmailAddress::parse("test", Some(ParsingOptions{is_lax: true, supports_unicode: false}));
   /// assert!(email.is_none());
-  /// let email = EmailAddress::parse("test", None);
+  /// let email = EmailAddress::parse("test", Some(ParsingOptions{is_lax: true, supports_unicode: false}));
   /// assert!(email.is_none());
   /// ```
-  pub fn parse(input: &str, is_strict: Option<bool>) -> Option<EmailAddress> {
+  pub fn parse(input: &str, options: Option<ParsingOptions>) -> Option<EmailAddress> {
     let instantiate = |mut parsed: pest::iterators::Pairs<Rule>| {
       let mut parsed = parsed
         .next()
@@ -115,20 +136,13 @@ impl EmailAddress {
         domain: String::from(parsed.next().unwrap().as_str()),
       })
     };
-    let is_strict = is_strict.unwrap_or_default();
-    match RFC5322::parse(Rule::address_single, input) {
-      Ok(parsed) => instantiate(parsed),
-      Err(_) => {
-        if is_strict {
-          None
-        } else {
-          match RFC5322::parse(Rule::address_single_obs, input) {
-            Ok(parsed) => instantiate(parsed),
-            Err(_) => None,
-          }
-        }
-      }
+    match EmailAddress::parse_core(input, options) {
+      Some(parsed) => instantiate(parsed),
+      None => None,
     }
+  }
+  pub fn is_valid(input: &str, options: Option<ParsingOptions>) -> bool {
+    EmailAddress::parse_core(input, options).is_some()
   }
   /// Returns the local part of the email address.
   ///
@@ -139,10 +153,10 @@ impl EmailAddress {
   /// ```
   /// use email_address_parser::EmailAddress;
   ///
-  /// let email = EmailAddress::new("foo", "bar.com", Some(true)).unwrap();
+  /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
   /// assert_eq!(email.local_part(), "foo");
   ///
-  /// let email = EmailAddress::parse("foo@bar.com", Some(true)).unwrap();
+  /// let email = EmailAddress::parse("foo@bar.com", None).unwrap();
   /// assert_eq!(email.local_part(), "foo");
   /// ```
   #[doc(hidden)]
@@ -158,15 +172,33 @@ impl EmailAddress {
   /// ```
   /// use email_address_parser::EmailAddress;
   ///
-  /// let email = EmailAddress::new("foo", "bar.com", Some(true)).unwrap();
+  /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
   /// assert_eq!(email.domain(), "bar.com");
   ///
-  /// let email = EmailAddress::parse("foo@bar.com", Some(true)).unwrap();
+  /// let email = EmailAddress::parse("foo@bar.com", None).unwrap();
   /// assert_eq!(email.domain(), "bar.com");
   /// ```
   #[doc(hidden)]
   pub fn domain(&self) -> String {
     self.domain.clone()
+  }
+
+  fn parse_core<'i>(input: &'i str, options: Option<ParsingOptions>) -> Option<Pairs<'i, Rule>> {
+    let options = options.unwrap_or_default();
+    let is_strict = !options.is_lax;
+    match RFC5322::parse(Rule::address_single, input) {
+      Ok(parsed) => Some(parsed),
+      Err(_) => {
+        if is_strict {
+          None
+        } else {
+          match RFC5322::parse(Rule::address_single_obs, input) {
+            Ok(parsed) => Some(parsed),
+            Err(_) => None,
+          }
+        }
+      }
+    }
   }
 }
 
@@ -181,10 +213,10 @@ impl EmailAddress {
   /// ```
   /// use email_address_parser::EmailAddress;
   ///
-  /// let email = EmailAddress::new("foo", "bar.com", Some(true)).unwrap();
+  /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
   /// assert_eq!(email.get_local_part(), "foo");
   ///
-  /// let email = EmailAddress::parse("foo@bar.com", Some(true)).unwrap();
+  /// let email = EmailAddress::parse("foo@bar.com", None).unwrap();
   /// assert_eq!(email.get_local_part(), "foo");
   /// ```
   pub fn get_local_part(&self) -> &str {
@@ -198,10 +230,10 @@ impl EmailAddress {
   /// ```
   /// use email_address_parser::EmailAddress;
   ///
-  /// let email = EmailAddress::new("foo", "bar.com", Some(true)).unwrap();
+  /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
   /// assert_eq!(email.get_domain(), "bar.com");
   ///
-  /// let email = EmailAddress::parse("foo@bar.com", Some(true)).unwrap();
+  /// let email = EmailAddress::parse("foo@bar.com", None).unwrap();
   /// assert_eq!(email.get_domain(), "bar.com");
   /// ```
   pub fn get_domain(&self) -> &str {
@@ -221,7 +253,7 @@ mod tests {
 
   #[test]
   fn email_address_instantiation_works() {
-    let address = EmailAddress::new("foo", "bar.com", Some(true)).unwrap();
+    let address = EmailAddress::new("foo", "bar.com", None).unwrap();
     assert_eq!(address.get_local_part(), "foo");
     assert_eq!(address.get_domain(), "bar.com");
     assert_eq!(format!("{}", address), "foo@bar.com");
@@ -279,7 +311,13 @@ mod tests {
   #[test]
   fn can_parse_domain_with_space() {
     println!("{:#?}", RFC5322::parse(Rule::domain_obs, " iana .com"));
-    let actual = EmailAddress::parse("test@ iana .com", None);
+    let actual = EmailAddress::parse(
+      "test@ iana .com",
+      Some(ParsingOptions {
+        is_lax: true,
+        supports_unicode: false,
+      }),
+    );
     println!("{:#?}", actual);
     assert_eq!(actual.is_some(), true, "test@ iana .com");
   }
@@ -295,7 +333,13 @@ mod tests {
   #[test]
   fn can_parse_email_with_crlf() {
     let email = "\u{0d}\u{0a} test@iana.org";
-    let actual = EmailAddress::parse(&email, None);
+    let actual = EmailAddress::parse(
+      &email,
+      Some(ParsingOptions {
+        is_lax: true,
+        supports_unicode: false,
+      }),
+    );
     println!("{:#?}", actual);
     assert_eq!(format!("{}", actual.unwrap()), email);
   }

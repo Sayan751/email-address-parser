@@ -1,0 +1,8 @@
+{
+  "better-comments.tags": [
+    {
+      "tag": "//",
+      "strikethrough": false,
+    },
+  ]
+}
