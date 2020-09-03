@@ -8,7 +8,7 @@ export class EmailAddress {
    * const email = EmailAddress.new("foo", "bar.com");
    * ```
    */
-  static new(local_part: string, domain: string): EmailAddress;
+  static new(local_part: string, domain: string, options?: ParsingOptions): EmailAddress;
 
   /**
    * Parses a given string as an email address.
@@ -25,7 +25,7 @@ export class EmailAddress {
    * assert(EmailAddress.parse(`foo@-bar.com`) === undefined);
    * ```
    */
-  static parse(input: string, is_strict?: boolean): EmailAddress | undefined;
+  static parse(input: string, options?: ParsingOptions): EmailAddress | undefined;
   /**
    * @returns {string} The local part of the email address.
    * @example
@@ -50,4 +50,15 @@ export class EmailAddress {
    * ```
    */
   domain(): string;
+}
+export class ParsingOptions {
+  free(): void;
+/**
+* @returns {boolean}
+*/
+  is_lax: boolean;
+/**
+* @returns {boolean}
+*/
+  supports_unicode: boolean;
 }
