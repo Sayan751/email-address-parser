@@ -377,7 +377,7 @@ macro_rules! generate_is_valid_test {
         #[test]
         #[wasm_bindgen_test]
         fn $case() {
-          assert_eq!(EmailAddress::is_valid(&$address, None), $is_valid, \"expected {} not to be valid: {}\", $address, $is_valid);
+          assert_eq!(EmailAddress::is_valid(&$address, None), $is_valid, \"expected {} to be valid: {}\", $address, $is_valid);
         }
       )*
     }

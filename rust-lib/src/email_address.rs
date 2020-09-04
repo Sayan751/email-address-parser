@@ -15,7 +15,7 @@ impl Default for ParsingOptions {
   fn default() -> Self {
     ParsingOptions {
       is_lax: false,
-      supports_unicode: false,
+      supports_unicode: true,
     }
   }
 }
@@ -361,6 +361,13 @@ mod tests {
   #[test]
   fn can_parse_local_part_with_space_and_quote() {
     let actual = RFC5322::parse(Rule::local_part_complete, "\"test test\"");
+    println!("{:#?}", actual);
+    assert_eq!(actual.is_err(), false);
+  }
+
+  #[test]
+  fn can_parse_idn() {
+    let actual = RFC5322::parse(Rule::domain_complete, "bücher.com");
     println!("{:#?}", actual);
     assert_eq!(actual.is_err(), false);
   }

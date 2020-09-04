@@ -20,14 +20,23 @@ FWS = _{ ((WSP* ~ CRLF)? ~ WSP+) | obs_FWS }
 DQUOTE = { "\"" }
 quoted_pair = { ("\\" ~ (printable_us_ascii | WSP)) | obs_qp }
 // Printable US-ASCII characters not including "(", ")", or "\".
-ctext = { !("(" | ")" | "\\") ~ (printable_us_ascii | obs_ctext) }
+ctext = { !("(" | ")" | "\\") ~ (printable_us_ascii | UTF8_non_ascii | obs_ctext) }
 ccontent = { ctext | quoted_pair | comment }
 comment = { "(" ~ (FWS? ~ ccontent)* ~ FWS? ~ ")" }
 CFWS = _{ ((FWS? ~ comment)+ ~ FWS?) | FWS }
 
 atext = { ASCII_ALPHANUMERIC 
   | "!" | "#" |"$" | "%" | "&" | "'" |"*" | "+" |"-" | "/" |"=" | "?" |"^" | "_" |"`" | "{" |"|" | "}" |"~"
+  | UTF8_non_ascii
 }
+
+/*------------ UTF8 START -------------*/
+UTF8_2 = { '\u{80}'..'\u{7FF}' }
+UTF8_3 = { '\u{800}'..'\u{FFFF}' }
+UTF8_4 = { '\u{10000}'..'\u{10FFFF}' }
+UTF8_non_ascii = { UTF8_2 | UTF8_3 | UTF8_4 } 
+/*------------ UTF8 END -------------*/
+
 /**
  * The construction dot_atom_text rule is an intentional deviation from the RFC5322.
  * The original rule is `{ atext+ ("." ~ atext+)* }`.
@@ -43,11 +52,11 @@ dot_atom_text = {
 dot_atom = { WSP? ~ dot_atom_text ~ WSP? }
 
 // Printable US-ASCII characters not including "[", "]", or "\".
-dtext = { !("[" | "]" | "\\") ~ (printable_us_ascii | obs_dtext) }
+dtext = { !("[" | "]" | "\\") ~ (printable_us_ascii | UTF8_non_ascii | obs_dtext) }
 domain_literal = { CFWS? ~ "[" ~ (FWS? ~ dtext)* ~ FWS? ~ "]" ~ CFWS? }
 
 // Printable US-ASCII characters not including "\" or the quote character.
-qtext = { !(DQUOTE | "\\" ) ~ (printable_us_ascii | obs_qtext) }
+qtext = { !(DQUOTE | "\\" ) ~ (printable_us_ascii | UTF8_non_ascii | obs_qtext) }
 qcontent = { qtext | quoted_pair }
 quoted_string = { CFWS? ~ DQUOTE ~ (FWS? ~ qcontent)* ~ FWS? ~ DQUOTE ~ CFWS? }
 
