@@ -320,7 +320,7 @@ macro_rules! generate_negative_instantiation_test {
         #[test]
         #[wasm_bindgen_test]
         fn $case() {
-          assert_eq!(EmailAddress::new(&$local_part, &$domain, Some(ParsingOptions::new(true))).is_none(), true);
+          assert_eq!(EmailAddress::new(&$local_part, &$domain, Some(ParsingOptions::new(true))).is_err(), true);
         }
       )*
     }

@@ -29,3 +29,6 @@ wasm-bindgen-test = "^0.3.17"
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ["-Oz", "--enable-mutable-globals"]
+
+[profile.release]
+lto = true

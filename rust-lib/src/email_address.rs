@@ -17,6 +17,7 @@ pub struct ParsingOptions {
 
 #[wasm_bindgen]
 impl ParsingOptions {
+  #[wasm_bindgen(constructor)]
   pub fn new(is_lax: bool) -> ParsingOptions {
     ParsingOptions { is_lax }
   }
@@ -71,30 +72,31 @@ impl EmailAddress {
   ///
   /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
   ///
-  /// assert_eq!(EmailAddress::new("foo", "-bar.com", None).is_none(), true);
+  /// assert_eq!(EmailAddress::new("foo", "-bar.com", None).is_err(), true);
   /// ```
+  #[wasm_bindgen(constructor)]
   pub fn new(
     local_part: &str,
     domain: &str,
     options: Option<ParsingOptions>,
-  ) -> Option<EmailAddress> {
+  ) -> Result<EmailAddress, JsValue> /* Option<EmailAddress> */ {
     let options = options.unwrap_or_default();
     let is_strict = !options.is_lax;
 
     if (is_strict && !RFC5322::parse(Rule::local_part_complete, local_part).is_ok())
       || (!is_strict && !RFC5322::parse(Rule::local_part_complete, local_part).is_ok())
     {
-      // return Err(format!("Invalid local part '{}'.", local_part));
-      return None;
+      return Err(JsValue::from(format!("Invalid local part '{}'.", local_part)));
+      // return None;
     }
     if (is_strict && !RFC5322::parse(Rule::domain_complete, domain).is_ok())
       || (!is_strict && !RFC5322::parse(Rule::domain_complete, domain).is_ok())
     {
-      // return Err(format!("Invalid domain '{}'.", domain));
-      return None;
+      return Err(JsValue::from(format!("Invalid domain '{}'.", domain)));
+      // return None;
     }
 
-    Some(EmailAddress {
+    Ok(EmailAddress {
       local_part: String::from(local_part),
       domain: String::from(domain),
     })
@@ -172,43 +174,25 @@ impl EmailAddress {
   pub fn is_valid(input: &str, options: Option<ParsingOptions>) -> bool {
     EmailAddress::parse_core(input, options).is_some()
   }
-  /// Returns the local part of the email address.
-  ///
-  /// Note that if you are using this library from rust, then consider using the `get_local_part` method instead.
-  /// This returns a cloned copy of the local part string, instead of a borrowed `&str`, and exists purely for WASM interoperability.
-  ///
-  /// # Examples
-  /// ```
-  /// use email_address_parser::EmailAddress;
-  ///
-  /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
-  /// assert_eq!(email.local_part(), "foo");
-  ///
-  /// let email = EmailAddress::parse("foo@bar.com", None).unwrap();
-  /// assert_eq!(email.local_part(), "foo");
-  /// ```
+
   #[doc(hidden)]
-  pub fn local_part(&self) -> String {
+  #[allow(non_snake_case)]
+  #[wasm_bindgen(getter)]
+  pub fn localPart(&self) -> String {
     self.local_part.clone()
   }
-  /// Returns the domain of the email address.
-  ///
-  /// Note that if you are using this library from rust, then consider using the `get_domain` method instead.
-  /// This returns a cloned copy of the domain string, instead of a borrowed `&str`, and exists purely for WASM interoperability.
-  ///
-  /// # Examples
-  /// ```
-  /// use email_address_parser::EmailAddress;
-  ///
-  /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
-  /// assert_eq!(email.domain(), "bar.com");
-  ///
-  /// let email = EmailAddress::parse("foo@bar.com", None).unwrap();
-  /// assert_eq!(email.domain(), "bar.com");
-  /// ```
+
   #[doc(hidden)]
+  #[wasm_bindgen(getter)]
   pub fn domain(&self) -> String {
     self.domain.clone()
+  }
+
+  #[doc(hidden)]
+  #[allow(non_snake_case)]
+  #[wasm_bindgen(skip_typescript)]
+  pub fn toString(&self) -> String {
+    format!("{}@{}", self.local_part, self.domain)
   }
 
   fn parse_core<'i>(input: &'i str, options: Option<ParsingOptions>) -> Option<Pairs<'i, Rule>> {

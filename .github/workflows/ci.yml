@@ -43,10 +43,10 @@ jobs:
       run: wasm-pack test --headless --chrome # --firefox # Disabling tests in FF temporarily (refer: https://github.com/rustwasm/wasm-bindgen/issues/2261)
     
     - name: build WASM bundler
-      run: wasm-pack build --out-dir ../npm-pkg/dist/bundler
+      run: wasm-pack build --out-dir ../npm-pkg/dist/bundler --release
     
     - name: build WASM cjs
-      run: wasm-pack build --target nodejs --out-dir ../npm-pkg/dist/cjs
+      run: wasm-pack build --target nodejs --out-dir ../npm-pkg/dist/cjs --release
     
     - name: cleanup dist
       run: rm ../npm-pkg/dist/bundler/.gitignore ../npm-pkg/dist/bundler/email_address_parser.d.ts ../npm-pkg/dist/bundler/LICENSE ../npm-pkg/dist/bundler/package.json  ../npm-pkg/dist/bundler/README.md ../npm-pkg/dist/cjs/.gitignore ../npm-pkg/dist/cjs/email_address_parser.d.ts ../npm-pkg/dist/cjs/LICENSE ../npm-pkg/dist/cjs/package.json  ../npm-pkg/dist/cjs/README.md
