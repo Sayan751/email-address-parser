@@ -173,10 +173,10 @@ impl EmailAddress {
   /// use email_address_parser::EmailAddress;
   ///
   /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
-  /// assert_eq!(email.local_part(), "foo");
+  /// assert_eq!(email.localPart(), "foo");
   ///
   /// let email = EmailAddress::parse("foo@bar.com", None).unwrap();
-  /// assert_eq!(email.local_part(), "foo");
+  /// assert_eq!(email.localPart(), "foo");
   /// ```
   #[doc(hidden)]
   #[allow(non_snake_case)]
