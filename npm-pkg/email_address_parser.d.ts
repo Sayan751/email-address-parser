@@ -1,60 +1,91 @@
 export class EmailAddress {
-  free(): void;
-  /**
-   * Instantiates a new `EmailAddress`.
-   * 
-   * @example
-   * ```ts
-   * const email = EmailAddress.new("foo", "bar.com");
-   * ```
-   */
-  static new(local_part: string, domain: string, options?: ParsingOptions): EmailAddress;
+  public free(): void;
 
   /**
    * Parses a given string as an email address.
    * @param {string} input The input to parse.
-   * @param {boolean | undefined} is_strict  Use `true` to enable strict parsing.
-   * @returns {EmailAddress | undefined} An instance `EmailAddress` if the input is valid, else `undefined`.
+   * @param {ParsingOptions} [options] When not provided, the default options is used. That comprised of strict parsing; i.e. obsolete parts as defined by RFC5322 are not allowed.
+   * @returns {(EmailAddress | undefined)} An instance `EmailAddress` if the input is valid, else `undefined`.
    * 
    * @example
    * ```ts
-   * const email = EmailAddress.parse(`foo@bar.com`, true);
-   * assert(email.local_part() === "foo");
-   * assert(email.domain() === "bar.com");
+   * // valid address
+   * const email = EmailAddress.parse(`foo@bar.com`);
+   * assert(email.getLocalPart() === "foo");
+   * assert(email.getDomain() === "bar.com");
    * 
-   * assert(EmailAddress.parse(`foo@-bar.com`) === undefined);
+   * // invalid address
+   * assert(EmailAddress.parse(`foo@-bar.com`, new ParsingOptions(true)) === undefined);
    * ```
    */
-  static parse(input: string, options?: ParsingOptions): EmailAddress | undefined;
+  public static parse(input: string, options?: ParsingOptions): EmailAddress | undefined;
+
+  /**
+   * Validates if the given `input` string is an email address or not.
+   * Unlike the `parse` method, it does not instantiate an `EmailAddress`.
+   * @param {string} input The string to validate.
+   * @param {ParsingOptions} [options] When not provided, the default options is used. That comprised of strict parsing; i.e. obsolete parts as defined by RFC5322 are not allowed.
+   * @returns {boolean} `true` if the `input` is valid, `false` otherwise.
+   * @example
+   * ```ts
+   * assert(EmailAddress.isValid(`foo@bar.com`));
+   * assert(!EmailAddress.isValid(`foo@-bar.com`, new ParsingOptions(true)));
+   * ```
+   */
+
+  public static isValid(input: string, options?: ParsingOptions): boolean;
+
+  /**
+   * Instantiates a new `EmailAddress`.
+   * It throws error if either the local part or domain is invalid and cannot be parsed.
+   * 
+   * @param {ParsingOptions} [options] When not provided, the default options is used. That comprised of strict parsing; i.e. obsolete parts as defined by RFC5322 are not allowed.
+   * @example
+   * ```ts
+   * const email = new EmailAddress("foo", "bar.com");
+   * ```
+   */
+  public constructor(local_part: string, domain: string, options?: ParsingOptions);
+
   /**
    * @returns {string} The local part of the email address.
    * @example
    * ```
-   * let email = EmailAddress.new("foo", "bar.com");
-   * assert(email.local_part() === "foo");
+   * let email = new EmailAddress("foo", "bar.com");
+   * assert(email.localPart === "foo");
    * 
-   * email = EmailAddress.parse(`foo@bar.com`, true);
-   * assert(email.local_part() === "foo");
+   * email = EmailAddress.parse(`foo@bar.com`);
+   * assert(email.localPart === "foo");
    * ```
    */
-  local_part(): string;
+  public get localPart(): string;
+
   /**
    * @returns {string} The domain of the email address.
    * @example
    * ```  * 
-   * let email = EmailAddress.new("foo", "bar.com");
-   * assert(email.domain() === "bar.com");
+   * let email = new EmailAddress("foo", "bar.com");
+   * assert(email.domain === "bar.com");
    * 
-   * email = EmailAddress.parse(`foo@bar.com`, true);
-   * assert(email.domain() === "bar.com");
+   * email = EmailAddress.parse(`foo@bar.com`);
+   * assert(email.domain === "bar.com");
    * ```
    */
-  domain(): string;
+  public get domain(): string;
 }
-export class ParsingOptions {
-  free(): void;
+
 /**
-* @returns {boolean}
-*/
-  is_lax: boolean;
+ * Options for parsing.
+ */
+export class ParsingOptions {
+  public free(): void;
+  /**
+   * Instantiates `ParsingOptions`.
+   * @param {boolean} is_lax Can be set to`true` or `false` to  enable/disable obsolete parts parsing.
+   */
+  public constructor(is_lax: boolean);
+  /**
+   * Returns the is_lax option set during instantiation.
+   */
+  public readonly is_lax: boolean;
 }

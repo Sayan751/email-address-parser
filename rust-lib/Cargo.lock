@@ -68,6 +68,7 @@ dependencies = [
 name = "email-address-parser"
 version = "0.3.0-rc2"
 dependencies = [
+ "console_error_panic_hook",
  "pest",
  "pest_derive",
  "quick-xml",

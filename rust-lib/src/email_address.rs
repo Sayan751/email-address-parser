@@ -1,3 +1,4 @@
+extern crate console_error_panic_hook;
 extern crate pest;
 extern crate pest_derive;
 use pest::{iterators::Pairs, Parser};
@@ -59,47 +60,33 @@ impl EmailAddress {
   #![warn(missing_docs)]
   #![warn(missing_doc_code_examples)]
 
-  /// Instantiates a new `Some(EmailAddress)` for a valid local part and domain.
-  /// Returns `None` otherwise.
-  /// Ideally a `Result<EmailAddress, std::error::Error>` should have been returned instead of `Option<EmailAddress>`.
-  /// However, unfortunately it does not seems to be working with wasm_bindgen (refer: https://github.com/rustwasm/wasm-bindgen/issues/1017).
-  ///
-  /// Accessible from WASM.
+  /// This is a WASM wrapper over EmailAddress::new that panics.
+  /// If you are using this lib from Rust then consider using EmailAddress::new.
   ///
   /// # Examples
   /// ```
   /// use email_address_parser::EmailAddress;
   ///
-  /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
-  ///
-  /// assert_eq!(EmailAddress::new("foo", "-bar.com", None).is_err(), true);
+  /// let email = EmailAddress::_new("foo", "bar.com", None);
   /// ```
+  ///
+  /// # Panics
+  ///
+  /// This method panics if the local part or domain is invalid.
+  ///
+  /// ```rust,should_panic
+  /// use email_address_parser::EmailAddress;
+  ///
+  /// EmailAddress::_new("foo", "-bar.com", None);
+  /// ```
+  #[doc(hidden)]
   #[wasm_bindgen(constructor)]
-  pub fn new(
-    local_part: &str,
-    domain: &str,
-    options: Option<ParsingOptions>,
-  ) -> Result<EmailAddress, JsValue> /* Option<EmailAddress> */ {
-    let options = options.unwrap_or_default();
-    let is_strict = !options.is_lax;
-
-    if (is_strict && !RFC5322::parse(Rule::local_part_complete, local_part).is_ok())
-      || (!is_strict && !RFC5322::parse(Rule::local_part_complete, local_part).is_ok())
-    {
-      return Err(JsValue::from(format!("Invalid local part '{}'.", local_part)));
-      // return None;
+  pub fn _new(local_part: &str, domain: &str, options: Option<ParsingOptions>) -> EmailAddress {
+    console_error_panic_hook::set_once();
+    match EmailAddress::new(local_part, domain, options) {
+      Ok(instance) => instance,
+      Err(message) => panic!(message),
     }
-    if (is_strict && !RFC5322::parse(Rule::domain_complete, domain).is_ok())
-      || (!is_strict && !RFC5322::parse(Rule::domain_complete, domain).is_ok())
-    {
-      return Err(JsValue::from(format!("Invalid domain '{}'.", domain)));
-      // return None;
-    }
-
-    Ok(EmailAddress {
-      local_part: String::from(local_part),
-      domain: String::from(domain),
-    })
   }
 
   /// Parses a given string as an email address.
@@ -171,10 +158,26 @@ impl EmailAddress {
   /// assert!(!EmailAddress::is_valid("test", Some(ParsingOptions::new(true))));
   /// assert!(!EmailAddress::is_valid("test", Some(ParsingOptions::new(true))));
   /// ```
+  #[wasm_bindgen(js_name="isValid")]
   pub fn is_valid(input: &str, options: Option<ParsingOptions>) -> bool {
     EmailAddress::parse_core(input, options).is_some()
   }
 
+  /// Returns the local part of the email address.
+  ///
+  /// Note that if you are using this library from rust, then consider using the `get_local_part` method instead.
+  /// This returns a cloned copy of the local part string, instead of a borrowed `&str`, and exists purely for WASM interoperability.
+  ///
+  /// # Examples
+  /// ```
+  /// use email_address_parser::EmailAddress;
+  ///
+  /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
+  /// assert_eq!(email.local_part(), "foo");
+  ///
+  /// let email = EmailAddress::parse("foo@bar.com", None).unwrap();
+  /// assert_eq!(email.local_part(), "foo");
+  /// ```
   #[doc(hidden)]
   #[allow(non_snake_case)]
   #[wasm_bindgen(getter)]
@@ -182,12 +185,30 @@ impl EmailAddress {
     self.local_part.clone()
   }
 
+  /// Returns the domain of the email address.
+  ///
+  /// Note that if you are using this library from rust, then consider using the `get_domain` method instead.
+  /// This returns a cloned copy of the domain string, instead of a borrowed `&str`, and exists purely for WASM interoperability.
+  ///
+  /// # Examples
+  /// ```
+  /// use email_address_parser::EmailAddress;
+  ///
+  /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
+  /// assert_eq!(email.domain(), "bar.com");
+  ///
+  /// let email = EmailAddress::parse("foo@bar.com", None).unwrap();
+  /// assert_eq!(email.domain(), "bar.com");
+  /// ```
   #[doc(hidden)]
   #[wasm_bindgen(getter)]
   pub fn domain(&self) -> String {
     self.domain.clone()
   }
 
+
+  /// Returns the formatted EmailAddress.
+  /// This exists purely for WASM interoperability.
   #[doc(hidden)]
   #[allow(non_snake_case)]
   #[wasm_bindgen(skip_typescript)]
@@ -217,6 +238,43 @@ impl EmailAddress {
 impl EmailAddress {
   #![warn(missing_docs)]
   #![warn(missing_doc_code_examples)]
+
+  /// Instantiates a new `Some(EmailAddress)` for a valid local part and domain.
+  /// Returns `Err` otherwise.
+  ///
+  /// # Examples
+  /// ```
+  /// use email_address_parser::EmailAddress;
+  ///
+  /// let email = EmailAddress::new("foo", "bar.com", None).unwrap();
+  ///
+  /// assert_eq!(EmailAddress::new("foo", "-bar.com", None).is_err(), true);
+  /// ```
+  pub fn new(
+    local_part: &str,
+    domain: &str,
+    options: Option<ParsingOptions>,
+  ) -> Result<EmailAddress, String> {
+    let options = options.unwrap_or_default();
+    let is_strict = !options.is_lax;
+
+    if (is_strict && !RFC5322::parse(Rule::local_part_complete, local_part).is_ok())
+      || (!is_strict && !RFC5322::parse(Rule::local_part_complete, local_part).is_ok())
+    {
+      return Err(format!("Invalid local part '{}'.", local_part));
+    }
+    if (is_strict && !RFC5322::parse(Rule::domain_complete, domain).is_ok())
+      || (!is_strict && !RFC5322::parse(Rule::domain_complete, domain).is_ok())
+    {
+      return Err(format!("Invalid domain '{}'.", domain));
+    }
+
+    Ok(EmailAddress {
+      local_part: String::from(local_part),
+      domain: String::from(domain),
+    })
+  }
+
   /// Returns the local part of the email address.
   ///
   /// Not accessible from WASM.
