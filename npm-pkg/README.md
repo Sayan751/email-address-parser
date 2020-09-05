@@ -65,7 +65,7 @@ const options = new ParsingOptions(false); // ParsingOptions { is_lax: false }
 ```
 
 With strict parsing, the [obsolete production rules](https://tools.ietf.org/html/rfc5322#section-4) as outlined in RFC 5322, are disallowed.
-Strict parsing is the default setting; i.e. while [parsing](TODO) or [validating](TODO) and email address, no parsing options needs to be explicitly supplied.
+Strict parsing is the default setting; i.e. while [parsing](#parse) or [validating](#isvalid) and email address, no parsing options needs to be explicitly supplied.
 
 #### Lax parsing
 
