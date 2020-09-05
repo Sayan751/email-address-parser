@@ -21,7 +21,7 @@
 //! ```
 //! use email_address_parser::*;
 //!
-//! let email = EmailAddress::parse("\u{0d}\u{0a} \u{0d}\u{0a} test@iana.org", Some(ParsingOptions{is_lax: true}));
+//! let email = EmailAddress::parse("\u{0d}\u{0a} \u{0d}\u{0a} test@iana.org", Some(ParsingOptions::new(true)));
 //! assert!(email.is_some());
 //! ```
 
