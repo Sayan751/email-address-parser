@@ -4,19 +4,20 @@ use pest::{iterators::Pairs, Parser};
 use std::fmt;
 use wasm_bindgen::prelude::*;
 
+/// Options for parsing.
+/// 
+/// The is only one available option so far `is_lax` which can be set to
+/// `true` or `false` to  enable/disable obsolete parts parsing.
+/// The default is `false`.
 #[wasm_bindgen]
 #[derive(Debug)]
 pub struct ParsingOptions {
   pub is_lax: bool,
-  pub supports_unicode: bool,
 }
 
 impl Default for ParsingOptions {
   fn default() -> Self {
-    ParsingOptions {
-      is_lax: false,
-      supports_unicode: true,
-    }
+    ParsingOptions { is_lax: false }
   }
 }
 
@@ -109,17 +110,17 @@ impl EmailAddress {
   /// assert_eq!(email.get_domain(), "bar.com");
   ///
   /// // non-strict parsing
-  /// let email = EmailAddress::parse("\u{0d}\u{0a} \u{0d}\u{0a} test@iana.org", Some(ParsingOptions{is_lax: true, supports_unicode: false}));
+  /// let email = EmailAddress::parse("\u{0d}\u{0a} \u{0d}\u{0a} test@iana.org", Some(ParsingOptions{is_lax: true}));
   /// assert!(email.is_some());
   ///
   /// // parsing invalid address
-  /// let email = EmailAddress::parse("test@-iana.org", Some(ParsingOptions{is_lax: true, supports_unicode: false}));
+  /// let email = EmailAddress::parse("test@-iana.org", Some(ParsingOptions{is_lax: true}));
   /// assert!(email.is_none());
-  /// let email = EmailAddress::parse("test@-iana.org", Some(ParsingOptions{is_lax: true, supports_unicode: false}));
+  /// let email = EmailAddress::parse("test@-iana.org", Some(ParsingOptions{is_lax: true}));
   /// assert!(email.is_none());
-  /// let email = EmailAddress::parse("test", Some(ParsingOptions{is_lax: true, supports_unicode: false}));
+  /// let email = EmailAddress::parse("test", Some(ParsingOptions{is_lax: true}));
   /// assert!(email.is_none());
-  /// let email = EmailAddress::parse("test", Some(ParsingOptions{is_lax: true, supports_unicode: false}));
+  /// let email = EmailAddress::parse("test", Some(ParsingOptions{is_lax: true}));
   /// assert!(email.is_none());
   /// ```
   pub fn parse(input: &str, options: Option<ParsingOptions>) -> Option<EmailAddress> {
@@ -141,6 +142,26 @@ impl EmailAddress {
       None => None,
     }
   }
+  /// Validates if the given `input` string is an email address or not.
+  /// 
+  /// Returns `true` if the `input` is valid, `false` otherwise.
+  /// Unlike the `parse` method, it does not instantiate an `EmailAddress`.
+  /// # Examples
+  /// ```
+  /// use email_address_parser::*;
+  ///
+  /// // strict validation
+  /// assert!(EmailAddress::is_valid("foo@bar.com", None));
+  ///
+  /// // non-strict validation
+  /// assert!(EmailAddress::is_valid("\u{0d}\u{0a} \u{0d}\u{0a} test@iana.org", Some(ParsingOptions{is_lax: true})));
+  ///
+  /// // invalid address
+  /// assert!(!EmailAddress::is_valid("test@-iana.org", Some(ParsingOptions{is_lax: true})));
+  /// assert!(!EmailAddress::is_valid("test@-iana.org", Some(ParsingOptions{is_lax: true})));
+  /// assert!(!EmailAddress::is_valid("test", Some(ParsingOptions{is_lax: true})));
+  /// assert!(!EmailAddress::is_valid("test", Some(ParsingOptions{is_lax: true})));
+  /// ```
   pub fn is_valid(input: &str, options: Option<ParsingOptions>) -> bool {
     EmailAddress::parse_core(input, options).is_some()
   }
@@ -311,13 +332,7 @@ mod tests {
   #[test]
   fn can_parse_domain_with_space() {
     println!("{:#?}", RFC5322::parse(Rule::domain_obs, " iana .com"));
-    let actual = EmailAddress::parse(
-      "test@ iana .com",
-      Some(ParsingOptions {
-        is_lax: true,
-        supports_unicode: false,
-      }),
-    );
+    let actual = EmailAddress::parse("test@ iana .com", Some(ParsingOptions { is_lax: true }));
     println!("{:#?}", actual);
     assert_eq!(actual.is_some(), true, "test@ iana .com");
   }
@@ -333,13 +348,7 @@ mod tests {
   #[test]
   fn can_parse_email_with_crlf() {
     let email = "\u{0d}\u{0a} test@iana.org";
-    let actual = EmailAddress::parse(
-      &email,
-      Some(ParsingOptions {
-        is_lax: true,
-        supports_unicode: false,
-      }),
-    );
+    let actual = EmailAddress::parse(&email, Some(ParsingOptions { is_lax: true }));
     println!("{:#?}", actual);
     assert_eq!(format!("{}", actual.unwrap()), email);
   }

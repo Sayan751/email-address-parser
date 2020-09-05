@@ -176,7 +176,7 @@ macro_rules! generate_is_email_test {
         #[test]
         #[wasm_bindgen_test]
         fn $case() {
-          let email = EmailAddress::parse(&$email, Some(ParsingOptions{is_lax: true, supports_unicode: false}));
+          let email = EmailAddress::parse(&$email, Some(ParsingOptions{is_lax: true}));
           assert_eq!(email.is_some(), $is_email, \"expected {} to be valid: {}\", $email, $is_email);
           if $is_email {
             assert_eq!(
@@ -282,7 +282,7 @@ macro_rules! generate_positive_instantiation_test {
         #[test]
         #[wasm_bindgen_test]
         fn $case() {
-          let address = EmailAddress::new(&$local_part, &$domain, Some(ParsingOptions{is_lax: true, supports_unicode: false})).unwrap();
+          let address = EmailAddress::new(&$local_part, &$domain, Some(ParsingOptions{is_lax: true})).unwrap();
           assert_eq!(address.get_local_part(), $local_part);
           assert_eq!(address.get_domain(), $domain);
           assert_eq!(format!(\"{}\", address), concat!($local_part, \"@\", $domain), \"incorrect display\");
@@ -320,7 +320,7 @@ macro_rules! generate_negative_instantiation_test {
         #[test]
         #[wasm_bindgen_test]
         fn $case() {
-          assert_eq!(EmailAddress::new(&$local_part, &$domain, Some(ParsingOptions{is_lax: true, supports_unicode: false})).is_none(), true);
+          assert_eq!(EmailAddress::new(&$local_part, &$domain, Some(ParsingOptions{is_lax: true})).is_none(), true);
         }
       )*
     }

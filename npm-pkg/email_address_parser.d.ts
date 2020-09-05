@@ -57,8 +57,4 @@ export class ParsingOptions {
 * @returns {boolean}
 */
   is_lax: boolean;
-/**
-* @returns {boolean}
-*/
-  supports_unicode: boolean;
 }
