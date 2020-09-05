@@ -29,6 +29,8 @@
 //! In compliance to [RFC 6532](https://tools.ietf.org/html/rfc6532), it supports parsing, validating, and instantiating email addresses with Unicode characters.
 //! 
 //! ```rust
+//! use email_address_parser::*;
+//! 
 //! assert!(format!("{}", EmailAddress.new("foö", "bücher.de")) == "foö@bücher.de");
 //! assert!(format!("{}", EmailAddress.parse("foö@bücher.de")) == "foö@bücher.de");
 //! assert!(EmailAddress.isValid("foö@bücher.de"));
