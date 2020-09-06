@@ -9,6 +9,7 @@ repository = "https://github.com/Sayan751/email-address-parser"
 homepage = "https://github.com/Sayan751/email-address-parser"
 readme = "README.md"
 keywords = ["email-address", "parser", "rfc-5322", "rfc-6532"]
+exclude = ["build.rs", ".test_data", "benches", "tests", "Development.md"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -36,5 +37,6 @@ wasm-opt = ["-Oz", "--enable-mutable-globals"]
 lto = true
 
 [[bench]]
+path = "benches"
 name = "benchmarks"
 harness = false

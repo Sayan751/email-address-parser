@@ -11,10 +11,7 @@ fn main() {
   let out_dir = env::var_os("OUT_DIR").unwrap();
   let test_file_path = path::Path::new(&out_dir).join("generated_tests.rs");
   let mut test_file = fs::File::create(&test_file_path).unwrap();
-  let test_data_root = path::Path::new(&root)
-    .join("..")
-    .join("resources")
-    .join(".test_data");
+  let test_data_root = path::Path::new(&root).join(".test_data");
 
   let read_test_data = |file_name: &str| {
     fs::read_to_string(test_data_root.join(file_name))
