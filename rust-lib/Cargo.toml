@@ -27,9 +27,14 @@ quick-xml = "^0.18.1"
 
 [dev-dependencies]
 wasm-bindgen-test = "^0.3.17"
+criterion = "^0.3.3"
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ["-Oz", "--enable-mutable-globals"]
 
 [profile.release]
 lto = true
+
+[[bench]]
+name = "benchmarks"
+harness = false

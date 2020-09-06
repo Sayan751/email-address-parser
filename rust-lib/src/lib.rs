@@ -24,18 +24,17 @@
 //! let email = EmailAddress::parse("\u{0d}\u{0a} \u{0d}\u{0a} test@iana.org", Some(ParsingOptions::new(true)));
 //! assert!(email.is_some());
 //! ```
-//! 
+//!
 //! ## Unicode support
 //! In compliance to [RFC 6532](https://tools.ietf.org/html/rfc6532), it supports parsing, validating, and instantiating email addresses with Unicode characters.
-//! 
+//!
 //! ```rust
 //! use email_address_parser::*;
-//! 
+//!
 //! assert!(format!("{}", EmailAddress::new("foö", "bücher.de", None).unwrap()) == "foö@bücher.de");
 //! assert!(format!("{}", EmailAddress::parse("foö@bücher.de", None).unwrap()) == "foö@bücher.de");
 //! assert!(EmailAddress::is_valid("foö@bücher.de", None));
 //! ```
-
 
 #[macro_use]
 extern crate pest_derive;
