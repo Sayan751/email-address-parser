@@ -31,9 +31,9 @@
 //! ```rust
 //! use email_address_parser::*;
 //! 
-//! assert!(format!("{}", EmailAddress.new("foö", "bücher.de")) == "foö@bücher.de");
-//! assert!(format!("{}", EmailAddress.parse("foö@bücher.de")) == "foö@bücher.de");
-//! assert!(EmailAddress.isValid("foö@bücher.de"));
+//! assert!(format!("{}", EmailAddress::new("foö", "bücher.de")) == "foö@bücher.de");
+//! assert!(format!("{}", EmailAddress::parse("foö@bücher.de")) == "foö@bücher.de");
+//! assert!(EmailAddress::is_valid("foö@bücher.de"));
 //! ```
 
 

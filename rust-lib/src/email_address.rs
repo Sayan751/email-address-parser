@@ -158,7 +158,7 @@ impl EmailAddress {
   /// assert!(!EmailAddress::is_valid("test", Some(ParsingOptions::new(true))));
   /// assert!(!EmailAddress::is_valid("test", Some(ParsingOptions::new(true))));
   /// ```
-  #[wasm_bindgen(js_name="isValid")]
+  #[wasm_bindgen(js_name = "isValid")]
   pub fn is_valid(input: &str, options: Option<ParsingOptions>) -> bool {
     EmailAddress::parse_core(input, options).is_some()
   }
@@ -205,7 +205,6 @@ impl EmailAddress {
   pub fn domain(&self) -> String {
     self.domain.clone()
   }
-
 
   /// Returns the formatted EmailAddress.
   /// This exists purely for WASM interoperability.
