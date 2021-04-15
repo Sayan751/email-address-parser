@@ -3,6 +3,7 @@ extern crate pest;
 extern crate pest_derive;
 use pest::{iterators::Pairs, Parser};
 use std::fmt;
+use std::hash::Hash;
 use wasm_bindgen::prelude::*;
 
 /// Options for parsing.
@@ -49,7 +50,7 @@ struct RFC5322;
 /// assert_eq!(format!("{}", email), "foo@bar.com");
 /// ```
 #[wasm_bindgen]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 pub struct EmailAddress {
     local_part: String,
     domain: String,
@@ -326,6 +327,18 @@ mod tests {
         assert_eq!(address.get_local_part(), "foo");
         assert_eq!(address.get_domain(), "bar.com");
         assert_eq!(format!("{}", address), "foo@bar.com");
+    }
+
+    #[test]
+    fn email_address_supports_equality_checking() {
+        let foo_at_bar_dot_com = EmailAddress::new("foo", "bar.com", None).unwrap();
+        let foo_at_bar_dot_com_2 = EmailAddress::new("foo", "bar.com", None).unwrap();
+        let foob_at_ar_dot_com = EmailAddress::new("foob", "ar.com", None).unwrap();
+
+        assert_eq!(foo_at_bar_dot_com, foo_at_bar_dot_com);
+        assert_eq!(foo_at_bar_dot_com, foo_at_bar_dot_com_2);
+        assert_ne!(foo_at_bar_dot_com, foob_at_ar_dot_com);
+        assert_ne!(foo_at_bar_dot_com_2, foob_at_ar_dot_com);
     }
 
     #[test]
