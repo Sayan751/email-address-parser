@@ -1,3 +1,7 @@
+##  (2021-04-24)
+
+* Derive Eq, PartialEq, and Hash for EmailAddress ([c643037](https://github.com/Sayan751/email-address-parser/commit/c643037))
+
 ## 1.0.0 (2020-09-06)
 
 ### Features
