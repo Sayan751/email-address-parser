@@ -13,6 +13,6 @@ fn test_clone() {
     }
 
     // ensure it exists after the source is dropped
-    assert_eq!(&"foo", &actual.get_local_part());
-    assert_eq!(&"bar.com", &actual.get_domain());
+    assert_eq!("foo", actual.get_local_part());
+    assert_eq!("bar.com", actual.get_domain());
 }
