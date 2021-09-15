@@ -50,7 +50,7 @@ struct RFC5322;
 /// assert_eq!(format!("{}", email), "foo@bar.com");
 /// ```
 #[wasm_bindgen]
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct EmailAddress {
     local_part: String,
     domain: String,
