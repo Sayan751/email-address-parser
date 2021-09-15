@@ -1,4 +1,4 @@
-## 1.0.2 (2021-09-15)
+## 1.0.3 (2021-09-15)
 
 * Added a test for the clone functionality. ([356a343](https://github.com/Sayan751/email-address-parser/commit/356a343))
 * Dervice clone for EmailAddress struct. ([f59275a](https://github.com/Sayan751/email-address-parser/commit/f59275a))
