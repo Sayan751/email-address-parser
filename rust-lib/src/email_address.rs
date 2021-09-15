@@ -59,7 +59,7 @@ pub struct EmailAddress {
 #[wasm_bindgen]
 impl EmailAddress {
     #![warn(missing_docs)]
-    #![warn(missing_doc_code_examples)]
+    #![warn(rustdoc::missing_doc_code_examples)]
 
     /// This is a WASM wrapper over EmailAddress::new that panics.
     /// If you are using this lib from Rust then consider using EmailAddress::new.
@@ -86,7 +86,7 @@ impl EmailAddress {
         console_error_panic_hook::set_once();
         match EmailAddress::new(local_part, domain, options) {
             Ok(instance) => instance,
-            Err(message) => panic!(message),
+            Err(message) => panic!("{}",message),
         }
     }
 
@@ -237,7 +237,7 @@ impl EmailAddress {
 
 impl EmailAddress {
     #![warn(missing_docs)]
-    #![warn(missing_doc_code_examples)]
+    #![warn(rustdoc::missing_doc_code_examples)]
 
     /// Instantiates a new `Some(EmailAddress)` for a valid local part and domain.
     /// Returns `Err` otherwise.

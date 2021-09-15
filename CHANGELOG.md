@@ -1,4 +1,13 @@
-##  (2021-04-24)
+## 1.0.2 (2021-09-15)
+
+* Added a test for the clone functionality. ([356a343](https://github.com/Sayan751/email-address-parser/commit/356a343))
+* Dervice clone for EmailAddress struct. ([f59275a](https://github.com/Sayan751/email-address-parser/commit/f59275a))
+* Ignored intellij files. ([2a9c85e](https://github.com/Sayan751/email-address-parser/commit/2a9c85e))
+* Removed unnecessary borrows. ([ba8b3e0](https://github.com/Sayan751/email-address-parser/commit/ba8b3e0))
+
+
+
+## 1.0.1 (2021-04-24)
 
 * Derive Eq, PartialEq, and Hash for EmailAddress ([c643037](https://github.com/Sayan751/email-address-parser/commit/c643037))
 
