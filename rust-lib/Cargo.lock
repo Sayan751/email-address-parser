@@ -238,9 +238,12 @@ version = "1.0.3"
 dependencies = [
  "console_error_panic_hook",
  "criterion",
+ "email-address-parser",
  "pest",
  "pest_derive",
  "quick-xml",
+ "serde",
+ "serde_json",
  "wasm-bindgen",
  "wasm-bindgen-test",
 ]
@@ -565,6 +568,9 @@ name = "serde"
 version = "1.0.115"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e54c9a88f2da7238af84b5101443f0c0d0a3bbdc455e34a5c9497b1903ed55d5"
+dependencies = [
+ "serde_derive",
+]
 
 [[package]]
 name = "serde_cbor"

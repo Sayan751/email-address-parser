@@ -6,6 +6,9 @@ use std::fmt;
 use std::hash::Hash;
 use wasm_bindgen::prelude::*;
 
+#[cfg(feature = "serde")]
+use serde::Serialize;
+
 /// Options for parsing.
 ///
 /// The is only one available option so far `is_lax` which can be set to
@@ -51,6 +54,7 @@ struct RFC5322;
 /// ```
 #[wasm_bindgen]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct EmailAddress {
     local_part: String,
     domain: String,
@@ -314,6 +318,65 @@ impl EmailAddress {
 impl fmt::Display for EmailAddress {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         formatter.write_fmt(format_args!("{}@{}", self.local_part, self.domain))
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for EmailAddress {
+    fn deserialize<D: serde::de::Deserializer<'de>>(deserializer: D) -> Result<EmailAddress, D::Error> {
+        deserializer.deserialize_any(EmailAddressVisitor)
+    }
+}
+
+#[cfg(feature = "serde")]
+struct EmailAddressVisitor;
+
+#[cfg(feature = "serde")]
+impl<'de> serde::de::Visitor<'de> for EmailAddressVisitor {
+    type Value = EmailAddress;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        write!(formatter, "a local_part and domain representing an email address")
+    }
+
+    fn visit_map<A: serde::de::MapAccess<'de>>(self, mut map: A) -> Result<Self::Value, A::Error> {
+        use serde::de::Unexpected;
+
+        let entry_1 = map.next_entry::<String, String>()?;
+        let entry_2 = map.next_entry::<String, String>()?;
+        let entry_3 = map.next_entry::<String, String>()?;
+
+        if entry_3.is_some() {
+            return Err(serde::de::Error::invalid_length(2, &self));
+        }
+
+        fn get<'a>(
+            key: &str,
+            a: &'a Option<(String, String)>,
+            b: &'a Option<(String, String)>,
+        ) -> Result<&'a str, ()> {
+            if let Some(a_value) = a {
+                if let Some(b_value) = b {
+                    if a_value.0 == key {
+                        return Ok(&a_value.1);
+                    } else if b_value.0 == key {
+                        return Ok(&b_value.1);
+                    }
+                }
+            }
+
+            Err(())
+        }
+
+        let local_part = get("local_part", &entry_1, &entry_2)
+            .map_err(|_| serde::de::Error::invalid_length(2, &self))?;
+
+        let domain = get("domain", &entry_1, &entry_2)
+            .map_err(|_| serde::de::Error::invalid_length(2, &self))?;
+
+        EmailAddress::new(local_part, domain, None).map_err(|error| {
+            serde::de::Error::invalid_value(Unexpected::Other(&error), &self)
+        })
     }
 }
 
