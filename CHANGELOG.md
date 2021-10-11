@@ -1,3 +1,9 @@
+## 2.0.0-rc1 (2021-10-11)
+
+* fix: strict parsing ([7df3246](https://github.com/Sayan751/email-address-parser/commit/7df3246)), closes [#4](https://github.com/Sayan751/email-address-parser/issues/4)
+
+
+
 ## 1.0.3 (2021-09-15)
 
 * Added a test for the clone functionality. ([356a343](https://github.com/Sayan751/email-address-parser/commit/356a343))
