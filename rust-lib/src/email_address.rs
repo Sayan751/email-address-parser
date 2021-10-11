@@ -12,7 +12,7 @@ use wasm_bindgen::prelude::*;
 /// `true` or `false` to  enable/disable obsolete parts parsing.
 /// The default is `false`.
 #[wasm_bindgen]
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct ParsingOptions {
     pub is_lax: bool,
 }
@@ -86,7 +86,7 @@ impl EmailAddress {
         console_error_panic_hook::set_once();
         match EmailAddress::new(local_part, domain, options) {
             Ok(instance) => instance,
-            Err(message) => panic!("{}",message),
+            Err(message) => panic!("{}", message),
         }
     }
 
@@ -255,24 +255,18 @@ impl EmailAddress {
         domain: &str,
         options: Option<ParsingOptions>,
     ) -> Result<EmailAddress, String> {
-        let options = options.unwrap_or_default();
-        let is_strict = !options.is_lax;
-
-        if (is_strict && !RFC5322::parse(Rule::local_part_complete, local_part).is_ok())
-            || (!is_strict && !RFC5322::parse(Rule::local_part_complete, local_part).is_ok())
-        {
-            return Err(format!("Invalid local part '{}'.", local_part));
+        match EmailAddress::parse(&format!("{}@{}", local_part, domain), options.clone()) {
+            Some(email_address) => Ok(email_address),
+            None => {
+                if !options.unwrap_or_default().is_lax {
+                    return Err(format!("Invalid local part '{}'.", local_part));
+                }
+                Ok(EmailAddress {
+                    local_part: String::from(local_part),
+                    domain: String::from(domain),
+                })
+            }
         }
-        if (is_strict && !RFC5322::parse(Rule::domain_complete, domain).is_ok())
-            || (!is_strict && !RFC5322::parse(Rule::domain_complete, domain).is_ok())
-        {
-            return Err(format!("Invalid domain '{}'.", domain));
-        }
-
-        Ok(EmailAddress {
-            local_part: String::from(local_part),
-            domain: String::from(domain),
-        })
     }
 
     /// Returns the local part of the email address.
@@ -440,5 +434,18 @@ mod tests {
         let actual = RFC5322::parse(Rule::domain_complete, "bücher.com");
         println!("{:#?}", actual);
         assert_eq!(actual.is_err(), false);
+    }
+
+    #[test]
+    fn parsing_empty_local_part_and_domain() {
+        let actual = EmailAddress::parse("@", Some(ParsingOptions::new(true)));
+        assert_eq!(actual.is_none(), true, "expected none");
+        let actual = EmailAddress::new("", "", Some(ParsingOptions::new(false)));
+        assert_eq!(actual.is_err(), true, "expected error");
+        let actual = EmailAddress::new("", "", Some(ParsingOptions::new(true)));
+        assert_eq!(actual.is_ok(), true, "expected ok");
+        let actual = actual.unwrap();
+        assert_eq!(actual.domain, "");
+        assert_eq!(actual.local_part, "");
     }
 }
