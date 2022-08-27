@@ -1,3 +1,13 @@
+## 2.0.0-rc1 (2022-08-27)
+
+* chore: depensendcy update ([adddfc0](https://github.com/Sayan751/email-address-parser/commit/adddfc0))
+* chore: updated readme ([1ea65ce](https://github.com/Sayan751/email-address-parser/commit/1ea65ce))
+* chore: updated the node version in CI ([6ff216b](https://github.com/Sayan751/email-address-parser/commit/6ff216b))
+* chore(npm-pkg): fixed reported vulnerability ([df6de2b](https://github.com/Sayan751/email-address-parser/commit/df6de2b))
+* chore(npm-pkg): updated npm deps ([9ea74b8](https://github.com/Sayan751/email-address-parser/commit/9ea74b8))
+
+
+
 ## 2.0.0-rc1 (2021-10-11)
 
 * fix: strict parsing ([7df3246](https://github.com/Sayan751/email-address-parser/commit/7df3246)), closes [#4](https://github.com/Sayan751/email-address-parser/issues/4)
