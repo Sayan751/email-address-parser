@@ -1,9 +1,11 @@
+#[cfg(target_arch = "wasm32")]
 extern crate console_error_panic_hook;
 extern crate pest;
 extern crate pest_derive;
 use pest::{iterators::Pairs, Parser};
 use std::fmt;
 use std::hash::Hash;
+#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
 /// Options for parsing.
@@ -11,15 +13,15 @@ use wasm_bindgen::prelude::*;
 /// The is only one available option so far `is_lax` which can be set to
 /// `true` or `false` to  enable/disable obsolete parts parsing.
 /// The default is `false`.
-#[wasm_bindgen]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Debug,Clone)]
 pub struct ParsingOptions {
     pub is_lax: bool,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl ParsingOptions {
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(constructor))]
     pub fn new(is_lax: bool) -> ParsingOptions {
         ParsingOptions { is_lax }
     }
@@ -49,14 +51,14 @@ struct RFC5322;
 /// assert_eq!(email.get_domain(), "bar.com");
 /// assert_eq!(format!("{}", email), "foo@bar.com");
 /// ```
-#[wasm_bindgen]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct EmailAddress {
     local_part: String,
     domain: String,
 }
 
-#[wasm_bindgen]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl EmailAddress {
     #![warn(missing_docs)]
     #![warn(rustdoc::missing_doc_code_examples)]
@@ -81,8 +83,9 @@ impl EmailAddress {
     /// EmailAddress::_new("foo", "-bar.com", None);
     /// ```
     #[doc(hidden)]
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(constructor))]
     pub fn _new(local_part: &str, domain: &str, options: Option<ParsingOptions>) -> EmailAddress {
+        #[cfg(target_arch = "wasm32")]
         console_error_panic_hook::set_once();
         match EmailAddress::new(local_part, domain, options) {
             Ok(instance) => instance,
@@ -159,7 +162,7 @@ impl EmailAddress {
     /// assert!(!EmailAddress::is_valid("test", Some(ParsingOptions::new(true))));
     /// assert!(!EmailAddress::is_valid("test", Some(ParsingOptions::new(true))));
     /// ```
-    #[wasm_bindgen(js_name = "isValid")]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(js_name = "isValid"))]
     pub fn is_valid(input: &str, options: Option<ParsingOptions>) -> bool {
         EmailAddress::parse_core(input, options).is_some()
     }
@@ -181,7 +184,7 @@ impl EmailAddress {
     /// ```
     #[doc(hidden)]
     #[allow(non_snake_case)]
-    #[wasm_bindgen(getter)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
     pub fn localPart(&self) -> String {
         self.local_part.clone()
     }
@@ -202,7 +205,7 @@ impl EmailAddress {
     /// assert_eq!(email.domain(), "bar.com");
     /// ```
     #[doc(hidden)]
-    #[wasm_bindgen(getter)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter))]
     pub fn domain(&self) -> String {
         self.domain.clone()
     }
@@ -211,7 +214,7 @@ impl EmailAddress {
     /// This exists purely for WASM interoperability.
     #[doc(hidden)]
     #[allow(non_snake_case)]
-    #[wasm_bindgen(skip_typescript)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(skip_typescript))]
     pub fn toString(&self) -> String {
         format!("{}@{}", self.local_part, self.domain)
     }
