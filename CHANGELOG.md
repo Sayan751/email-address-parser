@@ -1,3 +1,9 @@
+##  (2022-12-26)
+
+* Make wasm-bindgen dependency optional. ([96ccb04](https://github.com/Sayan751/email-address-parser/commit/96ccb04))
+
+
+
 ## 2.0.0-rc1 (2022-08-27)
 
 * chore: depensendcy update ([adddfc0](https://github.com/Sayan751/email-address-parser/commit/adddfc0))
