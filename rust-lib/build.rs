@@ -94,11 +94,13 @@ macro_rules! generate_positive_parsing_test {
     #[cfg(test)]
     mod parses_valid_email_address {
       use email_address_parser::*;
+      #[cfg(target_arch = \"wasm32\")]
       use wasm_bindgen_test::*;
+      #[cfg(target_arch = \"wasm32\")]
       wasm_bindgen_test_configure!(run_in_browser);
       $(
         #[test]
-        #[wasm_bindgen_test]
+        #[cfg_attr(target_arch = \"wasm32\", wasm_bindgen_test)]
         fn $case() {
           let address_str = concat!($local_part, \"@\", $domain);
           let address = EmailAddress::parse(&address_str, None);
@@ -135,11 +137,13 @@ macro_rules! generate_negative_parsing_test {
     #[cfg(test)]
     mod does_not_parse_invalid_email_address {
       use email_address_parser::*;
+      #[cfg(target_arch = \"wasm32\")]
       use wasm_bindgen_test::*;
+      #[cfg(target_arch = \"wasm32\")]
       wasm_bindgen_test_configure!(run_in_browser);
       $(
         #[test]
-        #[wasm_bindgen_test]
+        #[cfg_attr(target_arch = \"wasm32\", wasm_bindgen_test)]
         fn $case() {
           let address_str = concat!($local_part, \"@\", $domain);
           assert_eq!(EmailAddress::parse(&address_str, None).is_none(), true, \"expected {} not to be parsed\", address_str);
@@ -170,11 +174,13 @@ macro_rules! generate_is_email_test {
     #[cfg(test)]
     mod is_email_parsing_tests {
       use email_address_parser::*;
+      #[cfg(target_arch = \"wasm32\")]
       use wasm_bindgen_test::*;
+      #[cfg(target_arch = \"wasm32\")]
       wasm_bindgen_test_configure!(run_in_browser);
       $(
         #[test]
-        #[wasm_bindgen_test]
+        #[cfg_attr(target_arch = \"wasm32\", wasm_bindgen_test)]
         fn $case() {
           let email = EmailAddress::parse(&$email, Some(ParsingOptions::new(true)));
           assert_eq!(email.is_some(), $is_email, \"expected {} to be valid: {}\", $email, $is_email);
@@ -276,11 +282,13 @@ macro_rules! generate_positive_instantiation_test {
     #[cfg(test)]
     mod instantiates_valid_email_address {
       use email_address_parser::*;
+      #[cfg(target_arch = \"wasm32\")]
       use wasm_bindgen_test::*;
+      #[cfg(target_arch = \"wasm32\")]
       wasm_bindgen_test_configure!(run_in_browser);
       $(
         #[test]
-        #[wasm_bindgen_test]
+        #[cfg_attr(target_arch = \"wasm32\", wasm_bindgen_test)]
         fn $case() {
           let address = EmailAddress::new(&$local_part, &$domain, Some(ParsingOptions::new(true))).unwrap();
           assert_eq!(address.get_local_part(), $local_part);
@@ -314,11 +322,13 @@ macro_rules! generate_negative_instantiation_test {
     #[cfg(test)]
     mod panics_instantiating_invalid_email_address {
       use email_address_parser::*;
+      #[cfg(target_arch = \"wasm32\")]
       use wasm_bindgen_test::*;
+      #[cfg(target_arch = \"wasm32\")]
       wasm_bindgen_test_configure!(run_in_browser);
       $(
         #[test]
-        #[wasm_bindgen_test]
+        #[cfg_attr(target_arch = \"wasm32\", wasm_bindgen_test)]
         fn $case() {
           assert_eq!(EmailAddress::new(&$local_part, &$domain, Some(ParsingOptions::new(false))).is_err(), true);
           assert_eq!(EmailAddress::new(&$local_part, &$domain, Some(ParsingOptions::new(true))).is_err(), false);
@@ -372,11 +382,13 @@ macro_rules! generate_is_valid_test {
     #[cfg(test)]
     mod is_valid_email_address {
       use email_address_parser::*;
+      #[cfg(target_arch = \"wasm32\")]
       use wasm_bindgen_test::*;
+      #[cfg(target_arch = \"wasm32\")]
       wasm_bindgen_test_configure!(run_in_browser);
       $(
         #[test]
-        #[wasm_bindgen_test]
+        #[cfg_attr(target_arch = \"wasm32\", wasm_bindgen_test)]
         fn $case() {
           assert_eq!(EmailAddress::is_valid(&$address, None), $is_valid, \"expected {} to be valid: {}\", $address, $is_valid);
         }
