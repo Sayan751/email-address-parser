@@ -5,6 +5,7 @@ extern crate pest_derive;
 use pest::{iterators::Pairs, Parser};
 use std::fmt;
 use std::hash::Hash;
+use std::str::FromStr;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -30,6 +31,18 @@ impl ParsingOptions {
 impl Default for ParsingOptions {
     fn default() -> Self {
         ParsingOptions::new(false)
+    }
+}
+
+impl FromStr for EmailAddress {
+    type Err = fmt::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if let Some(email) = EmailAddress::parse(s, None) {
+            Ok(email)
+        } else {
+            Err(fmt::Error)
+        }
     }
 }
 
