@@ -5,6 +5,7 @@ extern crate pest_derive;
 use pest::{iterators::Pairs, Parser};
 use std::fmt;
 use std::hash::Hash;
+use std::str::FromStr;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
@@ -30,6 +31,34 @@ impl ParsingOptions {
 impl Default for ParsingOptions {
     fn default() -> Self {
         ParsingOptions::new(false)
+    }
+}
+
+/// Allows conversion from string slices (&str) to EmailAddress using the FromStr trait.
+/// This wraps around `EmailAddress::parse` using the default `ParsingOptions`.
+///
+/// # Examples
+/// ```
+/// use email_address_parser::EmailAddress;
+/// use std::str::FromStr;
+///
+/// const input_address : &str = "string@slice.com";
+///
+/// let myaddr : EmailAddress = input_address.parse().expect("could not parse str into EmailAddress");
+/// let myotheraddr = EmailAddress::from_str(input_address).expect("could create EmailAddress from str");
+///
+/// assert_eq!(myaddr, myotheraddr);
+/// ```
+impl FromStr for EmailAddress {
+    type Err = fmt::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let opts = ParsingOptions::default();
+        if let Some(email) = EmailAddress::parse(s, Some(opts)) {
+            Ok(email)
+        } else {
+            Err(fmt::Error)
+        }
     }
 }
 
