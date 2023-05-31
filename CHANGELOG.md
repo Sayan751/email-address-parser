@@ -1,3 +1,10 @@
+##  (2023-05-31)
+
+* add comment with working example ([322225e](https://github.com/Sayan751/email-address-parser/commit/322225e))
+* add FromStr method for EmailAddress ([0b85d56](https://github.com/Sayan751/email-address-parser/commit/0b85d56))
+
+
+
 ##  (2022-12-26)
 
 * Make wasm-bindgen dependency optional. ([96ccb04](https://github.com/Sayan751/email-address-parser/commit/96ccb04))
