@@ -34,11 +34,27 @@ impl Default for ParsingOptions {
     }
 }
 
+/// Allows conversion from string slices (&str) to EmailAddress using the FromStr trait.
+/// This wraps around `EmailAddress::parse` using the default `ParsingOptions`.
+///
+/// # Examples
+/// ```
+/// use email_address_parser::EmailAddress;
+/// use std::str::FromStr;
+///
+/// const input_address : &str = "string@slice.com";
+///
+/// let myaddr : EmailAddress = input_address.parse().expect("could not parse str into EmailAddress");
+/// let myotheraddr = EmailAddress::from_str(input_address).expect("could create EmailAddress from str");
+///
+/// assert_eq!(myaddr, myotheraddr);
+/// ```
 impl FromStr for EmailAddress {
     type Err = fmt::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if let Some(email) = EmailAddress::parse(s, None) {
+        let opts = ParsingOptions::default();
+        if let Some(email) = EmailAddress::parse(s, Some(opts)) {
             Ok(email)
         } else {
             Err(fmt::Error)
