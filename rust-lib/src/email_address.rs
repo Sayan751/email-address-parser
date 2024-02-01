@@ -11,7 +11,7 @@ use wasm_bindgen::prelude::*;
 
 /// Options for parsing.
 ///
-/// The is only one available option so far `is_lax` which can be set to
+/// There is only one available option so far `is_lax` which can be set to
 /// `true` or `false` to  enable/disable obsolete parts parsing.
 /// The default is `false`.
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
