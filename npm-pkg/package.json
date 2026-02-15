@@ -31,13 +31,17 @@
   "types": "email_address_parser.d.ts",
   "sideEffects": false,
   "scripts": {
-    "test": "mocha --config ./tests/.mocharc.js"
+    "test": "mocha --config ./tests/.mocharc.js",
+    "bench": "node ./benchmarks/bench.js",
+    "bench:wasm": "node ./benchmarks/bench.js",
+    "bench:wasm:quick": "node -e \"process.env.BENCH_ITERATIONS='5000'; process.env.BENCH_WARMUP_ITERATIONS='1000'; process.env.BENCH_TIME_MS='500'; require('./benchmarks/bench.js')\""
   },
   "devDependencies": {
     "@types/mocha": "^9.1.1",
     "@types/node": "^18.7.13",
     "mocha": "^10.0.0",
     "source-map-support": "^0.5.21",
+    "tinybench": "^2.9.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.8.2"
   }
