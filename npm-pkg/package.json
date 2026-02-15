@@ -52,7 +52,7 @@
   "scripts": {
     "test": "mocha --config ./tests/.mocharc.js",
     "generate:js-parser": "node ./scripts/generate-js-parser.cjs",
-    "build:js": "npm run generate:js-parser && node ./scripts/build-js-runtime.cjs && tsc -p ./tsconfig.js-wrapper.json",
+    "build": "npm run generate:js-parser && node ./scripts/build-js-runtime.cjs && tsc -p ./tsconfig.js-wrapper.json",
     "bench": "node ./benchmarks/bench.js",
     "bench:wasm": "node ./benchmarks/bench.js",
     "bench:wasm:quick": "node -e \"process.env.BENCH_ITERATIONS='5000'; process.env.BENCH_WARMUP_ITERATIONS='1000'; process.env.BENCH_TIME_MS='500'; require('./benchmarks/bench.js')\""

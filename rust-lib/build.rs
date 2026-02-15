@@ -11,7 +11,7 @@ fn main() {
     let out_dir = env::var_os("OUT_DIR").unwrap();
     let test_file_path = path::Path::new(&out_dir).join("generated_tests.rs");
     let mut test_file = fs::File::create(&test_file_path).unwrap();
-    let test_data_root = path::Path::new(&root).join(".test_data");
+    let test_data_root = path::Path::new(&root).join("..").join(".test_data");
 
     let read_test_data = |file_name: &str| {
         fs::read_to_string(test_data_root.join(file_name))
@@ -57,10 +57,11 @@ fn main() {
 
     write!(test_file, "{}", content.trim()).unwrap();
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=resources/.test_data/valid_local_parts.txt");
-    println!("cargo:rerun-if-changed=resources/.test_data/valid_domains.txt");
-    println!("cargo:rerun-if-changed=resources/.test_data/invalid_local_parts.txt");
-    println!("cargo:rerun-if-changed=resources/.test_data/invalid_domains.txt");
+    println!("cargo:rerun-if-changed={}", test_data_root.join("valid_local_parts.txt").display());
+    println!("cargo:rerun-if-changed={}", test_data_root.join("valid_domains.txt").display());
+    println!("cargo:rerun-if-changed={}", test_data_root.join("invalid_local_parts.txt").display());
+    println!("cargo:rerun-if-changed={}", test_data_root.join("invalid_domains.txt").display());
+    println!("cargo:rerun-if-changed={}", test_data_root.join("isemail_tests.xml").display());
 }
 
 fn create_case(
