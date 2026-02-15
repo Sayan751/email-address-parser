@@ -24,22 +24,44 @@
     "dist/bundler/email_address_parser_bg.js",
     "dist/cjs/email_address_parser_bg.wasm",
     "dist/cjs/email_address_parser.js",
+    "dist/esm/index.mjs",
+    "dist/esm/index.d.mts",
+    "dist/esm/generated/rfc5322.parser.mjs",
     "email_address_parser.d.ts"
   ],
+  "exports": {
+    ".": {
+      "types": "./email_address_parser.d.ts",
+      "import": "./dist/bundler/email_address_parser.js",
+      "require": "./dist/cjs/email_address_parser.js"
+    },
+    "./wasm": {
+      "types": "./email_address_parser.d.ts",
+      "import": "./dist/bundler/email_address_parser.js",
+      "require": "./dist/cjs/email_address_parser.js"
+    },
+    "./js": {
+      "types": "./dist/esm/index.d.mts",
+      "import": "./dist/esm/index.mjs"
+    }
+  },
   "module": "dist/bundler/email_address_parser.js",
   "main": "dist/cjs/email_address_parser.js",
   "types": "email_address_parser.d.ts",
   "sideEffects": false,
   "scripts": {
     "test": "mocha --config ./tests/.mocharc.js",
+    "generate:js-parser": "node ./scripts/generate-js-parser.cjs",
+    "build:js": "npm run generate:js-parser && node ./scripts/build-js-runtime.cjs && tsc -p ./tsconfig.js-wrapper.json",
     "bench": "node ./benchmarks/bench.js",
     "bench:wasm": "node ./benchmarks/bench.js",
     "bench:wasm:quick": "node -e \"process.env.BENCH_ITERATIONS='5000'; process.env.BENCH_WARMUP_ITERATIONS='1000'; process.env.BENCH_TIME_MS='500'; require('./benchmarks/bench.js')\""
   },
   "devDependencies": {
     "@types/mocha": "^9.1.1",
-    "@types/node": "^18.7.13",
+    "@types/node": "^18.19.130",
     "mocha": "^10.0.0",
+    "peggy": "^4.2.0",
     "source-map-support": "^0.5.21",
     "tinybench": "^2.9.0",
     "ts-node": "^10.9.1",
