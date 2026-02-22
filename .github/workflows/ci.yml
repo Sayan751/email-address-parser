@@ -15,6 +15,10 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
 
   build:
@@ -75,5 +79,3 @@ jobs:
       run: npm publish --access public --@sparser:registry=https://registry.npmjs.org/
       working-directory: ./npm-pkg
       if: startsWith(github.ref, 'refs/tags/v')
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
