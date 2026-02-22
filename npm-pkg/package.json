@@ -55,7 +55,11 @@
     "build": "npm run generate:js-parser && node ./scripts/build-js-runtime.cjs && tsc -p ./tsconfig.js-wrapper.json",
     "bench": "node ./benchmarks/bench.js",
     "bench:wasm": "node ./benchmarks/bench.js",
-    "bench:wasm:quick": "node -e \"process.env.BENCH_ITERATIONS='5000'; process.env.BENCH_WARMUP_ITERATIONS='1000'; process.env.BENCH_TIME_MS='500'; require('./benchmarks/bench.js')\""
+    "bench:esm": "node -e \"process.env.BENCH_TARGET='esm'; require('./benchmarks/bench.js')\"",
+    "bench:compare": "node -e \"process.env.BENCH_TARGET='compare'; require('./benchmarks/bench.js')\"",
+    "bench:wasm:quick": "node -e \"process.env.BENCH_ITERATIONS='5000'; process.env.BENCH_WARMUP_ITERATIONS='1000'; process.env.BENCH_TIME_MS='500'; require('./benchmarks/bench.js')\"",
+    "bench:esm:quick": "node -e \"process.env.BENCH_TARGET='esm'; process.env.BENCH_ITERATIONS='5000'; process.env.BENCH_WARMUP_ITERATIONS='1000'; process.env.BENCH_TIME_MS='500'; require('./benchmarks/bench.js')\"",
+    "bench:compare:quick": "node -e \"process.env.BENCH_TARGET='compare'; process.env.BENCH_ITERATIONS='5000'; process.env.BENCH_WARMUP_ITERATIONS='1000'; process.env.BENCH_TIME_MS='500'; require('./benchmarks/bench.js')\""
   },
   "devDependencies": {
     "@types/mocha": "^9.1.1",

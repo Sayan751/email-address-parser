@@ -1,58 +1,49 @@
 "use strict";
 
-async function runWasmSuite() {
-  const { Bench } = await import("tinybench");
-  const pkg = require("../dist/cjs/email_address_parser.js");
-  const { EmailAddress, ParsingOptions } = pkg;
+async function loadBenchmarkTarget(target) {
+  if (target === "wasm") {
+    const pkg = require("../dist/cjs/email_address_parser.js");
+    return {
+      label: "WASM",
+      target,
+      ...pkg,
+      releaseParsed(value) {
+        if (value && typeof value.free === "function") {
+          value.free();
+        }
+      },
+      releaseConstructed(value) {
+        if (value && typeof value.free === "function") {
+          value.free();
+        }
+      },
+      createLaxOptions(ParsingOptions) {
+        return new ParsingOptions(true);
+      },
+    };
+  }
 
-  const iterations = Number(process.env.BENCH_ITERATIONS || 20000);
-  const warmupIterations = Number(process.env.BENCH_WARMUP_ITERATIONS || 5000);
-  const timeMs = Number(process.env.BENCH_TIME_MS || 1000);
+  if (target === "esm") {
+    const pkg = await import("../dist/esm/index.mjs");
+    return {
+      label: "ESM (native JS parser)",
+      target,
+      ...pkg,
+      releaseParsed() {},
+      releaseConstructed() {},
+      createLaxOptions(ParsingOptions) {
+        return new ParsingOptions(true);
+      },
+    };
+  }
 
-  const bench = new Bench({
-    iterations,
-    warmupIterations,
-    time: timeMs,
-  });
+  throw new Error(
+    `Unknown BENCH_TARGET '${target}'. Supported values: wasm, esm.`
+  );
+}
 
-  bench
-    .add("wasm parse valid address with ASCII characters", () => {
-      const parsed = EmailAddress.parse("foo@bar.com");
-      if (parsed) parsed.free();
-    })
-    .add("wasm parse invalid address with invalid domain label", () => {
-      const parsed = EmailAddress.parse("foo@-bar.com");
-      if (parsed) parsed.free();
-    })
-    .add("wasm parse valid address with Unicode characters", () => {
-      const parsed = EmailAddress.parse("foö@bücher.de");
-      if (parsed) parsed.free();
-    })
-    .add("wasm parse obsolete RFC 5322 syntax in lax mode", () => {
-      const parsed = EmailAddress.parse(
-        "\r\n \r\n test@iana.org",
-        new ParsingOptions(true)
-      );
-      if (parsed) parsed.free();
-    })
-    .add("wasm isValid for valid address with ASCII characters", () => {
-      EmailAddress.isValid("foo@bar.com");
-    })
-    .add("wasm isValid for invalid address with invalid domain label", () => {
-      EmailAddress.isValid("foo@-bar.com");
-    })
-    .add("wasm isValid for valid address with Unicode characters", () => {
-      EmailAddress.isValid("foö@bücher.de");
-    })
-    .add("wasm constructor for valid address with ASCII characters", () => {
-      const email = new EmailAddress("foo", "bar.com");
-      email.free();
-    });
-
-  await bench.warmup();
-  await bench.run();
-
-  console.log("WASM benchmark (tinybench)");
+function formatAndPrintBench(label, iterations, warmupIterations, timeMs, bench) {
+  console.log(`${label} benchmark (tinybench)`);
   console.log(
     `iterations=${iterations}, warmupIterations=${warmupIterations}, timeMs=${timeMs}`
   );
@@ -98,16 +89,71 @@ async function runWasmSuite() {
   }
 }
 
+async function runSuite(target) {
+  const { Bench } = await import("tinybench");
+  const runtime = await loadBenchmarkTarget(target);
+  const { EmailAddress, ParsingOptions } = runtime;
+
+  const iterations = Number(process.env.BENCH_ITERATIONS || 20000);
+  const warmupIterations = Number(process.env.BENCH_WARMUP_ITERATIONS || 5000);
+  const timeMs = Number(process.env.BENCH_TIME_MS || 1000);
+
+  const bench = new Bench({
+    iterations,
+    warmupIterations,
+    time: timeMs,
+  });
+
+  bench
+    .add(`${target} parse valid address with ASCII characters`, () => {
+      const parsed = EmailAddress.parse("foo@bar.com");
+      runtime.releaseParsed(parsed);
+    })
+    .add(`${target} parse invalid address with invalid domain label`, () => {
+      const parsed = EmailAddress.parse("foo@-bar.com");
+      runtime.releaseParsed(parsed);
+    })
+    .add(`${target} parse valid address with Unicode characters`, () => {
+      const parsed = EmailAddress.parse("foö@bücher.de");
+      runtime.releaseParsed(parsed);
+    })
+    .add(`${target} parse obsolete RFC 5322 syntax in lax mode`, () => {
+      const parsed = EmailAddress.parse("\r\n \r\n test@iana.org", runtime.createLaxOptions(ParsingOptions));
+      runtime.releaseParsed(parsed);
+    })
+    .add(`${target} isValid for valid address with ASCII characters`, () => {
+      EmailAddress.isValid("foo@bar.com");
+    })
+    .add(`${target} isValid for invalid address with invalid domain label`, () => {
+      EmailAddress.isValid("foo@-bar.com");
+    })
+    .add(`${target} isValid for valid address with Unicode characters`, () => {
+      EmailAddress.isValid("foö@bücher.de");
+    })
+    .add(`${target} constructor for valid address with ASCII characters`, () => {
+      const email = new EmailAddress("foo", "bar.com");
+      runtime.releaseConstructed(email);
+    });
+
+  await bench.warmup();
+  await bench.run();
+
+  formatAndPrintBench(runtime.label, iterations, warmupIterations, timeMs, bench);
+}
+
+async function runCompareSuites() {
+  await runSuite("wasm");
+  console.log("");
+  await runSuite("esm");
+}
+
 async function main() {
   const target = process.env.BENCH_TARGET || "wasm";
-
-  if (target !== "wasm") {
-    throw new Error(
-      `Unknown BENCH_TARGET '${target}'. Supported values: wasm.`
-    );
+  if (target === "compare") {
+    await runCompareSuites();
+    return;
   }
-
-  await runWasmSuite();
+  await runSuite(target);
 }
 
 main().catch((err) => {
