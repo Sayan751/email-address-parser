@@ -1,5 +1,6 @@
 use quick_xml::events::Event;
 use quick_xml::Reader;
+use quick_xml::escape::unescape;
 use std::env;
 use std::fs;
 use std::io::Write;
@@ -217,21 +218,29 @@ generate_is_email_test!{
     ];
 
     loop {
-        match reader.read_event(&mut buf) {
+        match reader.read_event_into(&mut buf) {
             Ok(Event::Start(ref e)) => {
-                should_capture = match e.name() {
+                should_capture = match e.name().as_ref() {
                     b"address" | b"category" => true,
                     _ => false,
+                };
+                if should_capture {
+                    capture.clear();
                 }
             }
             Ok(Event::Text(e)) => {
-                capture = if should_capture {
-                    e.unescape_and_decode(&reader).unwrap()
-                } else {
-                    String::new()
+                if should_capture {
+                    let text = e.xml10_content().unwrap();
+                    capture.push_str(unescape(text.as_ref()).unwrap().as_ref());
                 }
             }
-            Ok(Event::End(ref e)) => match e.name() {
+            Ok(Event::GeneralRef(e)) => {
+                if should_capture {
+                    let entity = format!("&{};", e.xml10_content().unwrap());
+                    capture.push_str(unescape(&entity).unwrap().as_ref());
+                }
+            }
+            Ok(Event::End(ref e)) => match e.name().as_ref() {
                 b"address" => {
                     email = capture
                         .clone()
