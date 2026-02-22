@@ -8,6 +8,7 @@
 
 An [RFC 5322](https://tools.ietf.org/html/rfc5322) (without [display name support](#out-of-scope)), and [RFC 6532](https://tools.ietf.org/html/rfc6532) compliant email address parser made with [pest parser](https://github.com/pest-parser/pest).
 This repository contains a [rust crate](./rust-lib/README.md) as well as a wrapper [WebAssembly module](./npm-pkg/README.md).
+Benchmark summaries for releases are tracked in [Performance.md](./Performance.md).
 
 ### Out of scope
 
