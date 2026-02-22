@@ -18,21 +18,21 @@ name = "email_address_parser"
 crate-type = ["lib", "cdylib"]
 
 [dependencies]
-pest = "^2.1.3"
-pest_derive = "^2.1.0"
+pest = "^2.8.6"
+pest_derive = "^2.8.6"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "^0.2.67"
-console_error_panic_hook = "^0.1.6"
+wasm-bindgen = "^0.2.111"
+console_error_panic_hook = "^0.1.7"
 
 [build-dependencies]
-quick-xml = "^0.18.1"
+quick-xml = "^0.39.2"
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
-wasm-bindgen-test = "^0.3.17"
+wasm-bindgen-test = "^0.3.61"
 
-[dev-dependencies]
-criterion = "^0.3.3"
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+criterion = "^0.8.2"
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ["-Oz", "--enable-mutable-globals"]
@@ -41,6 +41,6 @@ wasm-opt = ["-Oz", "--enable-mutable-globals"]
 lto = true
 
 [[bench]]
-path = "benches"
+path = "benches/benchmarks.rs"
 name = "benchmarks"
 harness = false

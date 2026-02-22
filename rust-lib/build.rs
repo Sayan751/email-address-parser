@@ -1,5 +1,6 @@
 use quick_xml::events::Event;
 use quick_xml::Reader;
+use quick_xml::escape::unescape;
 use std::env;
 use std::fs;
 use std::io::Write;
@@ -11,7 +12,7 @@ fn main() {
     let out_dir = env::var_os("OUT_DIR").unwrap();
     let test_file_path = path::Path::new(&out_dir).join("generated_tests.rs");
     let mut test_file = fs::File::create(&test_file_path).unwrap();
-    let test_data_root = path::Path::new(&root).join(".test_data");
+    let test_data_root = path::Path::new(&root).join("..").join(".test_data");
 
     let read_test_data = |file_name: &str| {
         fs::read_to_string(test_data_root.join(file_name))
@@ -57,10 +58,11 @@ fn main() {
 
     write!(test_file, "{}", content.trim()).unwrap();
     println!("cargo:rerun-if-changed=build.rs");
-    println!("cargo:rerun-if-changed=resources/.test_data/valid_local_parts.txt");
-    println!("cargo:rerun-if-changed=resources/.test_data/valid_domains.txt");
-    println!("cargo:rerun-if-changed=resources/.test_data/invalid_local_parts.txt");
-    println!("cargo:rerun-if-changed=resources/.test_data/invalid_domains.txt");
+    println!("cargo:rerun-if-changed={}", test_data_root.join("valid_local_parts.txt").display());
+    println!("cargo:rerun-if-changed={}", test_data_root.join("valid_domains.txt").display());
+    println!("cargo:rerun-if-changed={}", test_data_root.join("invalid_local_parts.txt").display());
+    println!("cargo:rerun-if-changed={}", test_data_root.join("invalid_domains.txt").display());
+    println!("cargo:rerun-if-changed={}", test_data_root.join("isemail_tests.xml").display());
 }
 
 fn create_case(
@@ -216,21 +218,29 @@ generate_is_email_test!{
     ];
 
     loop {
-        match reader.read_event(&mut buf) {
+        match reader.read_event_into(&mut buf) {
             Ok(Event::Start(ref e)) => {
-                should_capture = match e.name() {
+                should_capture = match e.name().as_ref() {
                     b"address" | b"category" => true,
                     _ => false,
+                };
+                if should_capture {
+                    capture.clear();
                 }
             }
             Ok(Event::Text(e)) => {
-                capture = if should_capture {
-                    e.unescape_and_decode(&reader).unwrap()
-                } else {
-                    String::new()
+                if should_capture {
+                    let text = e.xml10_content().unwrap();
+                    capture.push_str(unescape(text.as_ref()).unwrap().as_ref());
                 }
             }
-            Ok(Event::End(ref e)) => match e.name() {
+            Ok(Event::GeneralRef(e)) => {
+                if should_capture {
+                    let entity = format!("&{};", e.xml10_content().unwrap());
+                    capture.push_str(unescape(&entity).unwrap().as_ref());
+                }
+            }
+            Ok(Event::End(ref e)) => match e.name().as_ref() {
                 b"address" => {
                     email = capture
                         .clone()
