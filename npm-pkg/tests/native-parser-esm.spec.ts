@@ -1,3 +1,7 @@
+/**
+ * These tests test the generated (Peggy) JS Parser
+ * against the same test corpus as rust.
+ */
 import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
@@ -126,7 +130,7 @@ const parseIsEmailCases = (): IsEmailCase[] => {
   return cases;
 };
 
-describe("peggy ESM", function () {
+describe("native JS parser ESM", function () {
   const esmUrl = pathToFileURL(path.resolve(specDir, "../dist/esm/index.mjs")).href;
   const esmPromise = import(esmUrl);
 
