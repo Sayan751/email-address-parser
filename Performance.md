@@ -10,7 +10,7 @@ Average time per operation (baseline `v2.0.0`), consolidated by API.
 
 <!-- Add performance report for new versions here. --->
 
-## v2.0.0 (baseline)
+## v2.0.1 (baseline)
 
 ### `parse`
 

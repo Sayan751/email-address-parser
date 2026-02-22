@@ -1,3 +1,17 @@
+## 2.0.1 (2026-02-22)
+
+* add comment with working example ([322225e](https://github.com/Sayan751/email-address-parser/commit/322225e))
+* add FromStr method for EmailAddress ([0b85d56](https://github.com/Sayan751/email-address-parser/commit/0b85d56))
+* add suggestion for version bump ([6fa20fc](https://github.com/Sayan751/email-address-parser/commit/6fa20fc))
+* added js ([e8af545](https://github.com/Sayan751/email-address-parser/commit/e8af545))
+* added performance report ([7a4c563](https://github.com/Sayan751/email-address-parser/commit/7a4c563))
+* Fix comment typo ([b982564](https://github.com/Sayan751/email-address-parser/commit/b982564))
+* Revert "add suggestion for version bump" ([763ac22](https://github.com/Sayan751/email-address-parser/commit/763ac22))
+* updated rust deps ([a66b9ba](https://github.com/Sayan751/email-address-parser/commit/a66b9ba))
+* chore: prepare v2.0.0 ([6748a35](https://github.com/Sayan751/email-address-parser/commit/6748a35))
+
+
+
 ##  (2023-05-31)
 
 * add comment with working example ([322225e](https://github.com/Sayan751/email-address-parser/commit/322225e))
