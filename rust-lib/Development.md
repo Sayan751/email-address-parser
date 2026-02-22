@@ -11,7 +11,6 @@
   ```shell
   wasm-pack build --out-dir ../npm-pkg/dist/bundler
   wasm-pack build --target nodejs --out-dir ../npm-pkg/dist/cjs
-  wasm-pack build --target web --out-dir ../npm-pkg/dist/web
   ```
 
 ### Test

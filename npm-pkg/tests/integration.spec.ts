@@ -2,7 +2,7 @@ import * as assert from 'assert';
 
 describe('integration', function () {
   it('works', async function () {
-    const { EmailAddress, ParsingOptions } = (await import('../')).default;
+    const { EmailAddress, ParsingOptions } = await import('../dist/cjs/email_address_parser.js');
 
     const emailStr = 'foo@bar.com';
     const email = EmailAddress.parse(emailStr);
