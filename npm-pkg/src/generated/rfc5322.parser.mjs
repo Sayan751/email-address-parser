@@ -172,7 +172,7 @@ function peg$parse(input, options) {
   var peg$FAILED = {};
   var peg$source = options.grammarSource;
 
-  var peg$startRuleFunctions = { address_single: peg$parseaddress_single };
+  var peg$startRuleFunctions = { address_single: peg$parseaddress_single, address_single_obs: peg$parseaddress_single_obs };
   var peg$startRuleFunction = peg$parseaddress_single;
 
   var peg$c0 = "@";
@@ -1655,41 +1655,44 @@ function peg$parse(input, options) {
       return cached.result;
     }
 
-    s0 = peg$currPos;
-    s1 = peg$currPos;
-    peg$silentFails++;
-    s2 = input.charAt(peg$currPos);
-    if (peg$r11.test(s2)) {
-      peg$currPos++;
-    } else {
-      s2 = peg$FAILED;
-      if (peg$silentFails === 0) { peg$fail(peg$e21); }
-    }
-    peg$silentFails--;
-    if (s2 === peg$FAILED) {
-      s1 = undefined;
-    } else {
-      peg$currPos = s1;
-      s1 = peg$FAILED;
-    }
-    if (s1 !== peg$FAILED) {
-      s2 = peg$parseprintable_us_ascii();
-      if (s2 === peg$FAILED) {
-        s2 = peg$parseUTF8_non_ascii();
-        if (s2 === peg$FAILED) {
-          s2 = peg$parseobs_dtext();
-        }
+    s0 = peg$parsequoted_pair();
+    if (s0 === peg$FAILED) {
+      s0 = peg$currPos;
+      s1 = peg$currPos;
+      peg$silentFails++;
+      s2 = input.charAt(peg$currPos);
+      if (peg$r11.test(s2)) {
+        peg$currPos++;
+      } else {
+        s2 = peg$FAILED;
+        if (peg$silentFails === 0) { peg$fail(peg$e21); }
       }
-      if (s2 !== peg$FAILED) {
-        s1 = [s1, s2];
-        s0 = s1;
+      peg$silentFails--;
+      if (s2 === peg$FAILED) {
+        s1 = undefined;
+      } else {
+        peg$currPos = s1;
+        s1 = peg$FAILED;
+      }
+      if (s1 !== peg$FAILED) {
+        s2 = peg$parseprintable_us_ascii();
+        if (s2 === peg$FAILED) {
+          s2 = peg$parseUTF8_non_ascii();
+          if (s2 === peg$FAILED) {
+            s2 = peg$parseobs_dtext();
+          }
+        }
+        if (s2 !== peg$FAILED) {
+          s1 = [s1, s2];
+          s0 = s1;
+        } else {
+          peg$currPos = s0;
+          s0 = peg$FAILED;
+        }
       } else {
         peg$currPos = s0;
         s0 = peg$FAILED;
       }
-    } else {
-      peg$currPos = s0;
-      s0 = peg$FAILED;
     }
 
     peg$resultsCache[key] = { nextPos: peg$currPos, result: s0 };
@@ -2895,7 +2898,8 @@ function peg$parse(input, options) {
 }
 
 const peg$allowedStartRules = [
-  "address_single"
+  "address_single",
+  "address_single_obs"
 ];
 
 export {

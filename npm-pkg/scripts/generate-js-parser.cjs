@@ -18,6 +18,7 @@ function main() {
     output: "source",
     format: "es",
     cache: true,
+    allowedStartRules: ["address_single", "address_single_obs"],
   });
 
   fs.mkdirSync(path.dirname(parserOutputPath), { recursive: true });

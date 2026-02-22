@@ -141,7 +141,8 @@ dot_atom
 
 /* Printable US-ASCII characters not including "[", "]", or "\". */
 dtext
-  = !("[" / "]" / "\\") (printable_us_ascii / UTF8_non_ascii / obs_dtext)
+  = quoted_pair
+  / !("[" / "]" / "\\") (printable_us_ascii / UTF8_non_ascii / obs_dtext)
 
 domain_literal
   = CFWS? "[" (FWS? dtext)* FWS? "]" CFWS?

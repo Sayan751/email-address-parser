@@ -6,11 +6,19 @@ import { pathToFileURL } from "url";
 const specDir = path.resolve(process.cwd(), "tests");
 const testDataRoot = path.resolve(specDir, "../../.test_data");
 
+const decodeRustStringLiteralText = (value: string): string =>
+  value
+    .replace(/\\u\{([0-9a-fA-F]+)\}/g, (_m, hex: string) =>
+      String.fromCodePoint(parseInt(hex, 16))
+    )
+    .replace(/\\"/g, '"')
+    .replace(/\\\\/g, "\\");
+
 const readLines = (fileName: string): string[] =>
   fs
     .readFileSync(path.join(testDataRoot, fileName), "utf8")
     .split(/\r?\n/)
-    .filter((line) => line.length > 0);
+    .map((line) => decodeRustStringLiteralText(line));
 
 const validLocalParts = readLines("valid_local_parts.txt");
 const validDomains = readLines("valid_domains.txt");
@@ -29,6 +37,12 @@ const ignoredIsEmailCases = new Set<string>([
 
 const decodeXmlText = (value: string): string =>
   value
+    .replace(/&#x([0-9a-fA-F]+);/g, (_m, hex: string) =>
+      String.fromCodePoint(parseInt(hex, 16))
+    )
+    .replace(/&#([0-9]+);/g, (_m, dec: string) =>
+      String.fromCodePoint(parseInt(dec, 10))
+    )
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&amp;/g, "&")
