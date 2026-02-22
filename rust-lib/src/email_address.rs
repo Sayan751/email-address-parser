@@ -106,7 +106,7 @@ impl EmailAddress {
     ///
     /// This method panics if the local part or domain is invalid.
     ///
-    /// ```rust,should_panic
+    /// ```rust,should_panic,ignore-wasm32
     /// use email_address_parser::EmailAddress;
     ///
     /// EmailAddress::_new("foo", "-bar.com", None);
