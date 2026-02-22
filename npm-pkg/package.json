@@ -59,13 +59,16 @@
     "bench:compare": "node -e \"process.env.BENCH_TARGET='compare'; require('./benchmarks/bench.js')\"",
     "bench:wasm:quick": "node -e \"process.env.BENCH_ITERATIONS='5000'; process.env.BENCH_WARMUP_ITERATIONS='1000'; process.env.BENCH_TIME_MS='500'; require('./benchmarks/bench.js')\"",
     "bench:esm:quick": "node -e \"process.env.BENCH_TARGET='esm'; process.env.BENCH_ITERATIONS='5000'; process.env.BENCH_WARMUP_ITERATIONS='1000'; process.env.BENCH_TIME_MS='500'; require('./benchmarks/bench.js')\"",
-    "bench:compare:quick": "node -e \"process.env.BENCH_TARGET='compare'; process.env.BENCH_ITERATIONS='5000'; process.env.BENCH_WARMUP_ITERATIONS='1000'; process.env.BENCH_TIME_MS='500'; require('./benchmarks/bench.js')\""
+    "bench:compare:quick": "node -e \"process.env.BENCH_TARGET='compare'; process.env.BENCH_ITERATIONS='5000'; process.env.BENCH_WARMUP_ITERATIONS='1000'; process.env.BENCH_TIME_MS='500'; require('./benchmarks/bench.js')\"",
+    "bench:browser": "node ./benchmarks/browser-runner.cjs",
+    "bench:browser:quick": "node -e \"process.env.BENCH_TARGET='compare'; process.env.BENCH_ITERATIONS='5000'; process.env.BENCH_WARMUP_ITERATIONS='1000'; process.env.BENCH_TIME_MS='500'; require('./benchmarks/browser-runner.cjs')\""
   },
   "devDependencies": {
     "@types/mocha": "^9.1.1",
     "@types/node": "^18.19.130",
     "mocha": "^10.0.0",
     "peggy": "^4.2.0",
+    "playwright-core": "^1.55.0",
     "source-map-support": "^0.5.21",
     "tinybench": "^2.9.0",
     "ts-node": "^10.9.1",
