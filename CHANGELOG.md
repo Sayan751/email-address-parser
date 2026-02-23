@@ -1,3 +1,9 @@
+## 3.0.0-rc.1 (2026-02-23)
+
+* removed pest in favor of nom ([1694c80](https://github.com/Sayan751/email-address-parser/commit/1694c80))
+
+
+
 ## 2.0.1 (2026-02-22)
 
 * add comment with working example ([322225e](https://github.com/Sayan751/email-address-parser/commit/322225e))
