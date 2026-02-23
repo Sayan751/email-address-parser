@@ -1,8 +1,6 @@
+use crate::nom_parser;
 #[cfg(target_arch = "wasm32")]
 extern crate console_error_panic_hook;
-extern crate pest;
-extern crate pest_derive;
-use pest::{iterators::Pairs, Parser};
 use std::fmt;
 use std::hash::Hash;
 use std::str::FromStr;
@@ -61,10 +59,6 @@ impl FromStr for EmailAddress {
         }
     }
 }
-
-#[derive(Parser)]
-#[grammar = "rfc5322.pest"]
-struct RFC5322;
 
 /// Email address struct.
 ///
@@ -153,23 +147,11 @@ impl EmailAddress {
     /// assert!(email.is_none());
     /// ```
     pub fn parse(input: &str, options: Option<ParsingOptions>) -> Option<EmailAddress> {
-        let instantiate = |mut parsed: pest::iterators::Pairs<Rule>| {
-            let mut parsed = parsed
-                .next()
-                .unwrap()
-                .into_inner()
-                .next()
-                .unwrap()
-                .into_inner();
-            Some(EmailAddress {
-                local_part: String::from(parsed.next().unwrap().as_str()),
-                domain: String::from(parsed.next().unwrap().as_str()),
-            })
-        };
-        match EmailAddress::parse_core(input, options) {
-            Some(parsed) => instantiate(parsed),
-            None => None,
-        }
+        let (local_part, domain) = EmailAddress::parse_core(input, options)?;
+        Some(EmailAddress {
+            local_part: String::from(local_part),
+            domain: String::from(domain),
+        })
     }
     /// Validates if the given `input` string is an email address or not.
     ///
@@ -248,22 +230,12 @@ impl EmailAddress {
         format!("{}@{}", self.local_part, self.domain)
     }
 
-    fn parse_core<'i>(input: &'i str, options: Option<ParsingOptions>) -> Option<Pairs<'i, Rule>> {
+    fn parse_core<'i>(
+        input: &'i str,
+        options: Option<ParsingOptions>,
+    ) -> Option<(&'i str, &'i str)> {
         let options = options.unwrap_or_default();
-        let is_strict = !options.is_lax;
-        match RFC5322::parse(Rule::address_single, input) {
-            Ok(parsed) => Some(parsed),
-            Err(_) => {
-                if is_strict {
-                    None
-                } else {
-                    match RFC5322::parse(Rule::address_single_obs, input) {
-                        Ok(parsed) => Some(parsed),
-                        Err(_) => None,
-                    }
-                }
-            }
-        }
+        nom_parser::parse_address(input, options.is_lax)
     }
 }
 
@@ -369,58 +341,49 @@ mod tests {
 
     #[test]
     fn domain_rule_does_not_parse_dash_google_dot_com() {
-        let address = RFC5322::parse(Rule::domain_complete, "-google.com");
-        println!("{:#?}", address);
-        assert_eq!(address.is_err(), true);
+        assert_eq!(nom_parser::test_parse_domain_complete("-google.com"), false);
     }
 
     #[test]
     fn domain_rule_does_not_parse_dash_google_dot_com_obs() {
-        let address = RFC5322::parse(Rule::domain_obs, "-google.com");
-        println!("{:#?}", address);
-        assert_eq!(address.is_err(), true);
+        assert_eq!(nom_parser::test_parse_domain_obs("-google.com"), false);
     }
 
     #[test]
     fn domain_rule_does_not_parse_dash_google_dash_dot_com() {
-        let address = RFC5322::parse(Rule::domain_complete, "-google-.com");
-        println!("{:#?}", address);
-        assert_eq!(address.is_err(), true);
+        assert_eq!(nom_parser::test_parse_domain_complete("-google-.com"), false);
     }
 
     #[test]
     fn domain_rule_parses_google_dash_dot_com() {
-        let address = RFC5322::parse(Rule::domain_complete, "google-.com");
-        println!("{:#?}", address);
-        assert_eq!(address.is_err(), true);
+        assert_eq!(nom_parser::test_parse_domain_complete("google-.com"), false);
     }
 
     #[test]
     fn domain_complete_punycode_domain() {
-        let actual = RFC5322::parse(Rule::domain_complete, "xn--masekowski-d0b.pl");
-        println!("{:#?}", actual);
-        assert_eq!(actual.is_err(), false);
+        assert_eq!(
+            nom_parser::test_parse_domain_complete("xn--masekowski-d0b.pl"),
+            true
+        );
     }
 
     #[test]
     fn can_parse_deprecated_local_part() {
-        let actual = RFC5322::parse(Rule::local_part_obs, "\"test\".\"test\"");
-        println!("{:#?}", actual);
-        assert_eq!(actual.is_err(), false);
+        assert_eq!(nom_parser::test_parse_local_part_obs("\"test\".\"test\""), true);
     }
 
     #[test]
     fn can_parse_email_with_deprecated_local_part() {
-        let actual = RFC5322::parse(Rule::address_single_obs, "\"test\".\"test\"@iana.org");
-        println!("{:#?}", actual);
-        assert_eq!(actual.is_err(), false);
+        assert_eq!(
+            nom_parser::test_parse_address_obs("\"test\".\"test\"@iana.org"),
+            true
+        );
     }
 
     #[test]
     fn can_parse_domain_with_space() {
-        println!("{:#?}", RFC5322::parse(Rule::domain_obs, " iana .com"));
+        assert_eq!(nom_parser::test_parse_domain_obs(" iana .com"), true);
         let actual = EmailAddress::parse("test@ iana .com", Some(ParsingOptions::new(true)));
-        println!("{:#?}", actual);
         assert_eq!(actual.is_some(), true, "test@ iana .com");
     }
 
@@ -442,30 +405,25 @@ mod tests {
 
     #[test]
     fn can_parse_local_part_with_space() {
-        let actual = RFC5322::parse(Rule::address_single_obs, "test . test@iana.org");
-        println!("{:#?}", actual);
-        assert_eq!(actual.is_err(), false);
+        assert_eq!(nom_parser::test_parse_address_obs("test . test@iana.org"), true);
     }
 
     #[test]
     fn can_parse_domain_with_bel() {
-        let actual = RFC5322::parse(Rule::domain_literal, "[RFC-5322-\u{07}-domain-literal]");
-        println!("{:#?}", actual);
-        assert_eq!(actual.is_err(), false);
+        assert_eq!(
+            nom_parser::test_parse_domain_literal("[RFC-5322-\u{07}-domain-literal]"),
+            true
+        );
     }
 
     #[test]
     fn can_parse_local_part_with_space_and_quote() {
-        let actual = RFC5322::parse(Rule::local_part_complete, "\"test test\"");
-        println!("{:#?}", actual);
-        assert_eq!(actual.is_err(), false);
+        assert_eq!(nom_parser::test_parse_local_part_complete("\"test test\""), true);
     }
 
     #[test]
     fn can_parse_idn() {
-        let actual = RFC5322::parse(Rule::domain_complete, "bücher.com");
-        println!("{:#?}", actual);
-        assert_eq!(actual.is_err(), false);
+        assert_eq!(nom_parser::test_parse_domain_complete("bücher.com"), true);
     }
 
     #[test]

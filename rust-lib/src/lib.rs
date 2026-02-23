@@ -17,7 +17,7 @@
 //! assert!(EmailAddress::parse("test@-iana.org", None).is_none());
 //! ```
 //!
-//! To parse an email address with obsolete parts (as per RFC 5322) in it, pass `None` as the second argument to have non-strict parsing.
+//! To parse an email address with obsolete parts (as per RFC 5322) in it, pass `Some(ParsingOptions::new(true))` to enable lax parsing.
 //! ```
 //! use email_address_parser::*;
 //!
@@ -36,10 +36,8 @@
 //! assert!(EmailAddress::is_valid("foö@bücher.de", None));
 //! ```
 
-#[macro_use]
-extern crate pest_derive;
-
 mod email_address;
+mod nom_parser;
 #[doc(inline)]
 pub use self::email_address::EmailAddress;
 pub use self::email_address::ParsingOptions;

@@ -51,6 +51,27 @@ function Format-TimeNs {
   return "$(Format-Number -Value $ms -Decimals 3) ms"
 }
 
+function Format-PercentChange {
+  param(
+    $CurrentNanoseconds,
+    $PreviousNanoseconds
+  )
+
+  if ($null -eq $CurrentNanoseconds -or $null -eq $PreviousNanoseconds) {
+    return "N/A"
+  }
+
+  $current = [double]$CurrentNanoseconds
+  $previous = [double]$PreviousNanoseconds
+  if ($previous -eq 0) {
+    return "N/A"
+  }
+
+  $deltaPct = (($current - $previous) / $previous) * 100.0
+  $prefix = if ($deltaPct -gt 0) { "+" } else { "" }
+  return "$prefix$(Format-Number -Value $deltaPct -Decimals 2)%"
+}
+
 function Invoke-External {
   param(
     [Parameter(Mandatory = $true)][string]$FilePath,
@@ -169,14 +190,166 @@ function Convert-NpmBenchToMap {
   return $map
 }
 
+function Convert-FormattedTimeToNs {
+  param(
+    $FormattedValue
+  )
+
+  if ($null -eq $FormattedValue) {
+    return $null
+  }
+
+  $text = ([string]$FormattedValue).Trim()
+  if ([string]::IsNullOrWhiteSpace($text) -or $text -eq "N/A") {
+    return $null
+  }
+
+  if ($text -notmatch '^([0-9]+(?:\.[0-9]+)?)\s*(ns|ms|µs|us)$') {
+    throw "Unsupported time format in performance table: '$text'"
+  }
+
+  $value = [double]::Parse($Matches[1], $script:InvariantCulture)
+  $unit = $Matches[2]
+
+  switch ($unit) {
+    "ns" { return $value }
+    "us" { return ($value * 1000.0) }
+    "µs" { return ($value * 1000.0) }
+    "ms" { return ($value * 1000000.0) }
+    default { throw "Unsupported time unit '$unit'" }
+  }
+}
+
+function Split-MarkdownRow {
+  param(
+    [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Line
+  )
+
+  $trimmed = $Line.Trim()
+  if (-not ($trimmed.StartsWith("|") -and $trimmed.EndsWith("|"))) {
+    return $null
+  }
+
+  $parts = $trimmed -split '\|'
+  if ($parts.Count -lt 3) {
+    return $null
+  }
+
+  $cells = New-Object System.Collections.Generic.List[string]
+  for ($i = 1; $i -lt ($parts.Count - 1); $i++) {
+    $null = $cells.Add($parts[$i].Trim())
+  }
+  return $cells.ToArray()
+}
+
+function Get-PreviousVersionPerformanceMaps {
+  param(
+    [Parameter(Mandatory = $true)][string]$DocumentText
+  )
+
+  $result = @{
+    VersionLabel = $null
+    RustMap = @{}
+    WasmMap = @{}
+  }
+
+  $lines = $DocumentText -split "`r?`n"
+  $versionStartIndex = -1
+  for ($i = 0; $i -lt $lines.Count; $i++) {
+    if ($lines[$i] -match '^##\s+(.+)$') {
+      $versionStartIndex = $i
+      $result.VersionLabel = $Matches[1].Trim()
+      break
+    }
+  }
+
+  if ($versionStartIndex -lt 0) {
+    return $result
+  }
+
+  $currentApi = $null
+  $headerIndexMap = $null
+
+  for ($i = $versionStartIndex + 1; $i -lt $lines.Count; $i++) {
+    $line = $lines[$i]
+
+    if ($line -match '^##\s+') {
+      break
+    }
+
+    if ($line -match '^###\s+(.+)$') {
+      $normalized = (($Matches[1] -replace '[`#\s]', '')).ToLowerInvariant()
+      $currentApi = switch ($normalized) {
+        "parse" { "parse" }
+        "is_valid" { "is_valid" }
+        "new" { "new" }
+        default { $null }
+      }
+      $headerIndexMap = $null
+      continue
+    }
+
+    $cells = Split-MarkdownRow -Line $line
+    if ($null -eq $cells) {
+      continue
+    }
+
+    if ($cells.Count -eq 0) {
+      continue
+    }
+
+    if ($cells[0] -eq "Case") {
+      $headerIndexMap = @{
+        Case = [Array]::IndexOf($cells, "Case")
+        Rust = [Array]::IndexOf($cells, "Rust (avg)")
+        Wasm = [Array]::IndexOf($cells, "WASM (avg)")
+      }
+      continue
+    }
+
+    if ($cells[0] -match '^-+$') {
+      continue
+    }
+
+    if ($null -eq $currentApi -or $null -eq $headerIndexMap) {
+      continue
+    }
+
+    if ($headerIndexMap.Case -lt 0 -or $headerIndexMap.Rust -lt 0 -or $headerIndexMap.Wasm -lt 0) {
+      continue
+    }
+
+    $requiredIndex = [Math]::Max([Math]::Max($headerIndexMap.Case, $headerIndexMap.Rust), $headerIndexMap.Wasm)
+    if ($cells.Count -le $requiredIndex) {
+      continue
+    }
+
+    $caseName = $cells[$headerIndexMap.Case]
+    $rustText = $cells[$headerIndexMap.Rust]
+    $wasmText = $cells[$headerIndexMap.Wasm]
+
+    $result.RustMap["$currentApi|$caseName"] = Convert-FormattedTimeToNs -FormattedValue $rustText
+    $result.WasmMap["$currentApi|$caseName"] = Convert-FormattedTimeToNs -FormattedValue $wasmText
+  }
+
+  return $result
+}
+
 function New-TableRow {
   param(
     [Parameter(Mandatory = $true)][string]$CaseName,
     $RustNs,
-    $WasmNs
+    $WasmNs,
+    $PreviousRustNs,
+    $PreviousWasmNs
   )
 
-  return "| {0,-18} | {1,10} | {2,10} |" -f $CaseName, (Format-TimeNs $RustNs), (Format-TimeNs $WasmNs)
+  return "| {0,-18} | {1,10} | {2,12} | {3,10} | {4,12} |" -f `
+    $CaseName, `
+    (Format-TimeNs $RustNs), `
+    (Format-PercentChange -CurrentNanoseconds $RustNs -PreviousNanoseconds $PreviousRustNs), `
+    (Format-TimeNs $WasmNs), `
+    (Format-PercentChange -CurrentNanoseconds $WasmNs -PreviousNanoseconds $PreviousWasmNs)
 }
 
 function Build-PerformanceSection {
@@ -184,6 +357,9 @@ function Build-PerformanceSection {
     [Parameter(Mandatory = $true)][string]$VersionLabelValue,
     [Parameter(Mandatory = $true)][hashtable]$RustMap,
     [Parameter(Mandatory = $true)][hashtable]$WasmMap,
+    [hashtable]$PreviousRustMap = @{},
+    [hashtable]$PreviousWasmMap = @{},
+    [string]$PreviousVersionLabel,
     [double]$RustMeasurementTimeSecValue,
     [double]$RustWarmupTimeSecValue,
     [int]$NpmTimeMsValue
@@ -213,13 +389,18 @@ function Build-PerformanceSection {
   $null = $lines.Add("")
   $null = $lines.Add(('- Criterion setup: `{0}`' -f "--measurement-time $RustMeasurementTimeSecValue --warm-up-time $RustWarmupTimeSecValue"))
   $null = $lines.Add(('- Tinybench setup: `{0}` (`--iterations` and `--warmup-iterations` are runner limits/defaults)' -f "--time-ms $NpmTimeMsValue"))
+  if (-not [string]::IsNullOrWhiteSpace($PreviousVersionLabel)) {
+    $null = $lines.Add(('- Delta columns compare against previous section: `{0}`' -f $PreviousVersionLabel))
+  } else {
+    $null = $lines.Add('- Delta columns compare against previous section: `N/A` (no prior section found)')
+  }
   $null = $lines.Add("")
 
   foreach ($section in $sections) {
     $null = $lines.Add("### ``$($section.Header)``")
     $null = $lines.Add("")
-    $null = $lines.Add("| Case               | Rust (avg) | WASM (avg) |")
-    $null = $lines.Add("| ------------------ | ---------: | ---------: |")
+    $null = $lines.Add("| Case               | Rust (avg) | Rust Δ vs prev | WASM (avg) | WASM Δ vs prev |")
+    $null = $lines.Add("| ------------------ | ---------: | -------------: | ---------: | -------------: |")
 
     foreach ($caseName in $section.Cases) {
       $rustKey = "$($section.Api)|$caseName"
@@ -227,8 +408,17 @@ function Build-PerformanceSection {
 
       $rustValue = if ($RustMap.ContainsKey($rustKey)) { [double]$RustMap[$rustKey] } else { $null }
       $wasmValue = if ($WasmMap.ContainsKey($wasmKey)) { [double]$WasmMap[$wasmKey] } else { $null }
+      $previousRustValue = if ($PreviousRustMap.ContainsKey($rustKey)) { $PreviousRustMap[$rustKey] } else { $null }
+      $previousWasmValue = if ($PreviousWasmMap.ContainsKey($wasmKey)) { $PreviousWasmMap[$wasmKey] } else { $null }
 
-      $null = $lines.Add((New-TableRow -CaseName $caseName -RustNs $rustValue -WasmNs $wasmValue))
+      $null = $lines.Add((
+        New-TableRow `
+          -CaseName $caseName `
+          -RustNs $rustValue `
+          -WasmNs $wasmValue `
+          -PreviousRustNs $previousRustValue `
+          -PreviousWasmNs $previousWasmValue
+      ))
     }
 
     $null = $lines.Add("")
@@ -246,6 +436,7 @@ Average time per operation, consolidated by API.
 
 - Rust: Criterion (`cargo bench --bench benchmarks`)
 - WASM: Tinybench (`npm run bench -- --json`)
+- New generated sections include `%` delta columns versus the immediately previous version section.
 - Results are useful for trend tracking; absolute values depend on machine/runtime/harness.
 - `N/A` in WASM `new` invalid cases: currently excluded from the npm benchmark because repeated throwing constructor calls destabilize the shared WASM instance during benchmarking.
 
@@ -315,19 +506,24 @@ if (@($npmBenchJson.skipped).Count -gt 0) {
 }
 $wasmMap = Convert-NpmBenchToMap -NpmBenchJson $npmBenchJson
 
-$sectionMarkdown = Build-PerformanceSection `
-  -VersionLabelValue $VersionLabel `
-  -RustMap $rustMap `
-  -WasmMap $wasmMap `
-  -RustMeasurementTimeSecValue $RustMeasurementTimeSec `
-  -RustWarmupTimeSecValue $RustWarmupTimeSec `
-  -NpmTimeMsValue $NpmTimeMs
-
 $existingDocument = if (Test-Path $resolvedOutputPath) {
   Get-Content -Path $resolvedOutputPath -Raw
 } else {
   Get-DefaultPerformanceDocument
 }
+
+$previousSectionData = Get-PreviousVersionPerformanceMaps -DocumentText $existingDocument
+
+$sectionMarkdown = Build-PerformanceSection `
+  -VersionLabelValue $VersionLabel `
+  -RustMap $rustMap `
+  -WasmMap $wasmMap `
+  -PreviousRustMap $previousSectionData.RustMap `
+  -PreviousWasmMap $previousSectionData.WasmMap `
+  -PreviousVersionLabel $previousSectionData.VersionLabel `
+  -RustMeasurementTimeSecValue $RustMeasurementTimeSec `
+  -RustWarmupTimeSecValue $RustWarmupTimeSec `
+  -NpmTimeMsValue $NpmTimeMs
 
 $updatedDocument = Insert-SectionAfterMarker -DocumentText $existingDocument -SectionText $sectionMarkdown
 
