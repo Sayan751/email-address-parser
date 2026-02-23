@@ -11,7 +11,7 @@ Average time per operation (baseline `v2.0.0`), consolidated by API.
 
 <!-- Add performance report for new versions here. --->
 
-## v2.0.2 (nom, no pest)
+## v3.0.0-rc.1 (nom, no pest)
 
 - Criterion setup: `--measurement-time 1 --warm-up-time 1`
 - Tinybench setup: `--time-ms 1000` (`--iterations` and `--warmup-iterations` are runner limits/defaults)

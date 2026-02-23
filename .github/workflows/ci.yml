@@ -80,6 +80,6 @@ jobs:
 
     # publish to npm
     - name: publish to npm
-      run: npm publish --access public --@sparser:registry=https://registry.npmjs.org/
+      run: npm publish --access public --@sparser:registry=https://registry.npmjs.org/ --tag latest
       working-directory: ./npm-pkg
       if: startsWith(github.ref, 'refs/tags/v')
