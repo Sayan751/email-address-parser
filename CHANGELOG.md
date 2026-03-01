@@ -1,3 +1,9 @@
+## 3.0.0-rc.3 (2026-03-01)
+
+* adding regex-vbased impl for JS ([2ad1261](https://github.com/Sayan751/email-address-parser/commit/2ad1261))
+
+
+
 ## 3.0.0-rc.1 (2026-02-23)
 
 * removed pest in favor of nom ([1694c80](https://github.com/Sayan751/email-address-parser/commit/1694c80))

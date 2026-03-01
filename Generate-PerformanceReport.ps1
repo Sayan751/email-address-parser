@@ -463,8 +463,8 @@ function Build-PerformanceSection {
   foreach ($section in $sections) {
     $null = $lines.Add("### ``$($section.Header)``")
     $null = $lines.Add("")
-    $null = $lines.Add("| Case               | Rust (avg) | Rust delta vs prev | WASM (avg) | WASM delta vs prev | Regex (avg) | Regex delta vs prev |")
-    $null = $lines.Add("| ------------------ | ---------: | -----------------: | ---------: | -----------------: | ----------: | -------------------: |")
+    $null = $lines.Add("| Case               | Rust (avg) | Rust Δ vs prev | WASM (avg) | WASM Δ vs prev | Regex (avg) | Regex Δ vs prev |")
+    $null = $lines.Add("| ------------------ | ---------: | -------------: | ---------: | -------------: | ----------: | --------------: |")
 
     foreach ($caseName in $section.Cases) {
       $rustKey = "$($section.Api)|$caseName"
@@ -505,7 +505,7 @@ Average time per operation, consolidated by API.
 
 - Rust: Criterion (`cargo bench --bench benchmarks`)
 - WASM + Regex: Tinybench (`npm run bench -- --json --target all`)
-- New generated sections include `%` delta columns versus the immediately previous version section.
+- New generated sections include `%` Δ columns versus the immediately previous version section.
 - Results are useful for trend tracking; absolute values depend on machine/runtime/harness.
 - `N/A` in JS `new` invalid cases: currently excluded from npm benchmarks because repeated throwing constructor calls destabilize the shared WASM instance during benchmarking.
 
