@@ -1,4 +1,4 @@
-import { isValidEmail, parseEmail } from "./email-regex.js";
+import { isValidEmail, parseEmail } from "./email-regex.ts";
 
 export class ParsingOptions {
   public readonly is_lax: boolean;

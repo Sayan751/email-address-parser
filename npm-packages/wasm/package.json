@@ -32,6 +32,6 @@
   "sideEffects": false,
   "scripts": {
     "bench": "node ../benchmarks/bench.js --target wasm",
-    "test": "mocha --config ./tests/.mocharc.js"
+    "test": "node --test --experimental-strip-types ./tests/integration.spec.ts"
   }
 }

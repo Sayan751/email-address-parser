@@ -39,6 +39,6 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "tsc",
-    "test": "mocha --config ./tests/.mocharc.cjs"
+    "test": "node --test --experimental-strip-types ./tests/email-regex.spec.ts"
   }
 }

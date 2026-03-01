@@ -1,6 +1,7 @@
 import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
+import { describe, it } from "node:test";
 import { fileURLToPath } from "url";
 import {
   DOMAIN_REGEX_LAX,
@@ -11,8 +12,8 @@ import {
   LOCAL_PART_REGEX_STRICT,
   isValidEmail,
   parseEmail,
-} from "../dist/email-regex.js";
-import { EmailAddress, ParsingOptions } from "../dist/email-address-parser-regex.js";
+} from "../src/email-regex.ts";
+import { EmailAddress, ParsingOptions } from "../src/email-address-parser-regex.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

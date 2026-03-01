@@ -3,6 +3,8 @@
     "target": "es2019",
     "module": "nodenext",
     "moduleResolution": "nodenext",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -13,7 +15,8 @@
     "declaration": true,
     "declarationMap": false,
     "sourceMap": false,
-    "noEmit": false
+    "noEmit": false,
+    "allowImportingTsExtensions": true
   },
   "include": [
     "src/**/*.ts"

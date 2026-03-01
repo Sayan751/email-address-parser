@@ -4,10 +4,10 @@
     "rootDir": "..",
     "noEmit": true,
     "types": [
-      "node",
-      "mocha"
+      "node"
     ]
   },
+  "exclude": [],
   "include": [
     "./**/*.ts"
   ]

@@ -1,4 +1,5 @@
-import * as assert from 'assert';
+const assert = require('assert');
+const { describe, it } = require('node:test');
 
 describe('integration', function () {
   it('works', async function () {

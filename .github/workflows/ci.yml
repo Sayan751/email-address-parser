@@ -21,7 +21,7 @@ permissions:
 
 jobs:
 
-  build:
+  rust-and-wasm:
 
     runs-on: ubuntu-latest
     
@@ -84,7 +84,7 @@ jobs:
       working-directory: ./npm-packages/wasm
       if: startsWith(github.ref, 'refs/tags/v')
 
-  regex:
+  regex-package:
 
     runs-on: ubuntu-latest
     defaults:
