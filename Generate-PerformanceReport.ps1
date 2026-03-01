@@ -190,6 +190,40 @@ function Convert-NpmBenchToMap {
   return $map
 }
 
+function Convert-NpmBenchToMaps {
+  param(
+    [Parameter(Mandatory = $true)]$NpmBenchJson
+  )
+
+  $maps = @{
+    WasmMap = @{}
+    RegexMap = @{}
+  }
+
+  $summaries = if ($null -ne $NpmBenchJson.summaries) {
+    @($NpmBenchJson.summaries)
+  } else {
+    @($NpmBenchJson)
+  }
+
+  foreach ($summary in $summaries) {
+    $targetMap = Convert-NpmBenchToMap -NpmBenchJson $summary
+    $target = if ($null -ne $summary.target) {
+      ([string]$summary.target).ToLowerInvariant()
+    } else {
+      "wasm"
+    }
+
+    switch ($target) {
+      "wasm" { $maps.WasmMap = $targetMap }
+      "regex" { $maps.RegexMap = $targetMap }
+      default { Write-Warning "Unknown npm benchmark target '$target'. Ignoring it in report generation." }
+    }
+  }
+
+  return $maps
+}
+
 function Convert-FormattedTimeToNs {
   param(
     $FormattedValue
@@ -242,6 +276,21 @@ function Split-MarkdownRow {
   return $cells.ToArray()
 }
 
+function Get-HeaderColumnIndex {
+  param(
+    [Parameter(Mandatory = $true)][string[]]$Cells,
+    [Parameter(Mandatory = $true)][string]$ColumnName
+  )
+
+  for ($i = 0; $i -lt $Cells.Count; $i++) {
+    if ($Cells[$i].Equals($ColumnName, [System.StringComparison]::OrdinalIgnoreCase)) {
+      return $i
+    }
+  }
+
+  return -1
+}
+
 function Get-PreviousVersionPerformanceMaps {
   param(
     [Parameter(Mandatory = $true)][string]$DocumentText
@@ -251,6 +300,7 @@ function Get-PreviousVersionPerformanceMaps {
     VersionLabel = $null
     RustMap = @{}
     WasmMap = @{}
+    RegexMap = @{}
   }
 
   $lines = $DocumentText -split "`r?`n"
@@ -300,9 +350,10 @@ function Get-PreviousVersionPerformanceMaps {
 
     if ($cells[0] -eq "Case") {
       $headerIndexMap = @{
-        Case = [Array]::IndexOf($cells, "Case")
-        Rust = [Array]::IndexOf($cells, "Rust (avg)")
-        Wasm = [Array]::IndexOf($cells, "WASM (avg)")
+        Case = Get-HeaderColumnIndex -Cells $cells -ColumnName "Case"
+        Rust = Get-HeaderColumnIndex -Cells $cells -ColumnName "Rust (avg)"
+        Wasm = Get-HeaderColumnIndex -Cells $cells -ColumnName "WASM (avg)"
+        Regex = Get-HeaderColumnIndex -Cells $cells -ColumnName "Regex (avg)"
       }
       continue
     }
@@ -320,6 +371,9 @@ function Get-PreviousVersionPerformanceMaps {
     }
 
     $requiredIndex = [Math]::Max([Math]::Max($headerIndexMap.Case, $headerIndexMap.Rust), $headerIndexMap.Wasm)
+    if ($headerIndexMap.Regex -ge 0) {
+      $requiredIndex = [Math]::Max($requiredIndex, $headerIndexMap.Regex)
+    }
     if ($cells.Count -le $requiredIndex) {
       continue
     }
@@ -327,9 +381,13 @@ function Get-PreviousVersionPerformanceMaps {
     $caseName = $cells[$headerIndexMap.Case]
     $rustText = $cells[$headerIndexMap.Rust]
     $wasmText = $cells[$headerIndexMap.Wasm]
+    $regexText = if ($headerIndexMap.Regex -ge 0) { $cells[$headerIndexMap.Regex] } else { $null }
 
     $result.RustMap["$currentApi|$caseName"] = Convert-FormattedTimeToNs -FormattedValue $rustText
     $result.WasmMap["$currentApi|$caseName"] = Convert-FormattedTimeToNs -FormattedValue $wasmText
+    if ($headerIndexMap.Regex -ge 0) {
+      $result.RegexMap["$currentApi|$caseName"] = Convert-FormattedTimeToNs -FormattedValue $regexText
+    }
   }
 
   return $result
@@ -340,16 +398,20 @@ function New-TableRow {
     [Parameter(Mandatory = $true)][string]$CaseName,
     $RustNs,
     $WasmNs,
+    $RegexNs,
     $PreviousRustNs,
-    $PreviousWasmNs
+    $PreviousWasmNs,
+    $PreviousRegexNs
   )
 
-  return "| {0,-18} | {1,10} | {2,12} | {3,10} | {4,12} |" -f `
+  return "| {0,-18} | {1,10} | {2,12} | {3,10} | {4,12} | {5,11} | {6,13} |" -f `
     $CaseName, `
     (Format-TimeNs $RustNs), `
     (Format-PercentChange -CurrentNanoseconds $RustNs -PreviousNanoseconds $PreviousRustNs), `
     (Format-TimeNs $WasmNs), `
-    (Format-PercentChange -CurrentNanoseconds $WasmNs -PreviousNanoseconds $PreviousWasmNs)
+    (Format-PercentChange -CurrentNanoseconds $WasmNs -PreviousNanoseconds $PreviousWasmNs), `
+    (Format-TimeNs $RegexNs), `
+    (Format-PercentChange -CurrentNanoseconds $RegexNs -PreviousNanoseconds $PreviousRegexNs)
 }
 
 function Build-PerformanceSection {
@@ -357,8 +419,10 @@ function Build-PerformanceSection {
     [Parameter(Mandatory = $true)][string]$VersionLabelValue,
     [Parameter(Mandatory = $true)][hashtable]$RustMap,
     [Parameter(Mandatory = $true)][hashtable]$WasmMap,
+    [Parameter(Mandatory = $true)][hashtable]$RegexMap,
     [hashtable]$PreviousRustMap = @{},
     [hashtable]$PreviousWasmMap = @{},
+    [hashtable]$PreviousRegexMap = @{},
     [string]$PreviousVersionLabel,
     [double]$RustMeasurementTimeSecValue,
     [double]$RustWarmupTimeSecValue,
@@ -388,7 +452,7 @@ function Build-PerformanceSection {
   $null = $lines.Add("## $VersionLabelValue")
   $null = $lines.Add("")
   $null = $lines.Add(('- Criterion setup: `{0}`' -f "--measurement-time $RustMeasurementTimeSecValue --warm-up-time $RustWarmupTimeSecValue"))
-  $null = $lines.Add(('- Tinybench setup: `{0}` (`--iterations` and `--warmup-iterations` are runner limits/defaults)' -f "--time-ms $NpmTimeMsValue"))
+  $null = $lines.Add(('- Tinybench setup: `{0}` (`--iterations` and `--warmup-iterations` are runner limits/defaults)' -f "--target all --time-ms $NpmTimeMsValue"))
   if (-not [string]::IsNullOrWhiteSpace($PreviousVersionLabel)) {
     $null = $lines.Add(('- Delta columns compare against previous section: `{0}`' -f $PreviousVersionLabel))
   } else {
@@ -399,25 +463,30 @@ function Build-PerformanceSection {
   foreach ($section in $sections) {
     $null = $lines.Add("### ``$($section.Header)``")
     $null = $lines.Add("")
-    $null = $lines.Add("| Case               | Rust (avg) | Rust Δ vs prev | WASM (avg) | WASM Δ vs prev |")
-    $null = $lines.Add("| ------------------ | ---------: | -------------: | ---------: | -------------: |")
+    $null = $lines.Add("| Case               | Rust (avg) | Rust delta vs prev | WASM (avg) | WASM delta vs prev | Regex (avg) | Regex delta vs prev |")
+    $null = $lines.Add("| ------------------ | ---------: | -----------------: | ---------: | -----------------: | ----------: | -------------------: |")
 
     foreach ($caseName in $section.Cases) {
       $rustKey = "$($section.Api)|$caseName"
       $wasmKey = "$($section.Api)|$caseName"
+      $regexKey = "$($section.Api)|$caseName"
 
       $rustValue = if ($RustMap.ContainsKey($rustKey)) { [double]$RustMap[$rustKey] } else { $null }
       $wasmValue = if ($WasmMap.ContainsKey($wasmKey)) { [double]$WasmMap[$wasmKey] } else { $null }
+      $regexValue = if ($RegexMap.ContainsKey($regexKey)) { [double]$RegexMap[$regexKey] } else { $null }
       $previousRustValue = if ($PreviousRustMap.ContainsKey($rustKey)) { $PreviousRustMap[$rustKey] } else { $null }
       $previousWasmValue = if ($PreviousWasmMap.ContainsKey($wasmKey)) { $PreviousWasmMap[$wasmKey] } else { $null }
+      $previousRegexValue = if ($PreviousRegexMap.ContainsKey($regexKey)) { $PreviousRegexMap[$regexKey] } else { $null }
 
       $null = $lines.Add((
         New-TableRow `
           -CaseName $caseName `
           -RustNs $rustValue `
           -WasmNs $wasmValue `
+          -RegexNs $regexValue `
           -PreviousRustNs $previousRustValue `
-          -PreviousWasmNs $previousWasmValue
+          -PreviousWasmNs $previousWasmValue `
+          -PreviousRegexNs $previousRegexValue
       ))
     }
 
@@ -435,10 +504,10 @@ function Get-DefaultPerformanceDocument {
 Average time per operation, consolidated by API.
 
 - Rust: Criterion (`cargo bench --bench benchmarks`)
-- WASM: Tinybench (`npm run bench -- --json`)
+- WASM + Regex: Tinybench (`npm run bench -- --json --target all`)
 - New generated sections include `%` delta columns versus the immediately previous version section.
 - Results are useful for trend tracking; absolute values depend on machine/runtime/harness.
-- `N/A` in WASM `new` invalid cases: currently excluded from the npm benchmark because repeated throwing constructor calls destabilize the shared WASM instance during benchmarking.
+- `N/A` in JS `new` invalid cases: currently excluded from npm benchmarks because repeated throwing constructor calls destabilize the shared WASM instance during benchmarking.
 
 __INSERT_MARKER__
 '@
@@ -462,7 +531,7 @@ function Insert-SectionAfterMarker {
 
 $repoRoot = Get-RepoRoot
 $rustDir = Join-Path $repoRoot "rust-lib"
-$npmDir = Join-Path $repoRoot "npm-pkg"
+$npmDir = Join-Path $repoRoot "npm-packages"
 $criterionRoot = Join-Path $rustDir "target\criterion"
 $resolvedOutputPath = if ([System.IO.Path]::IsPathRooted($OutputPath)) {
   $OutputPath
@@ -488,10 +557,15 @@ if ($SkipNpmBench) {
   } else {
     Join-Path $repoRoot $NpmJsonPath
   }
-  $npmBenchOutput = Get-Content -Path $resolvedNpmJsonPath -Raw
+  $npmBenchOutput = Get-Content -Path $resolvedNpmJsonPath -Raw -Encoding UTF8
 } else {
+  Invoke-External -FilePath "npm" -Arguments @(
+    "run", "build", "--workspace", "regex"
+  ) -WorkingDirectory $npmDir
+
   $npmBenchOutput = Invoke-External -FilePath "node" -Arguments @(
     ".\benchmarks\bench.js", "--json",
+    "--target", "all",
     "--time-ms", ([string]$NpmTimeMs),
     "--iterations", ([string]$NpmIterations),
     "--warmup-iterations", ([string]$NpmWarmupIterations)
@@ -501,13 +575,23 @@ if ($SkipNpmBench) {
 $rustMap = Convert-RustBenchToMap -CriterionRoot $criterionRoot
 
 $npmBenchJson = $npmBenchOutput | ConvertFrom-Json
-if (@($npmBenchJson.skipped).Count -gt 0) {
-  Write-Warning "npm benchmark reported skipped/errored tasks. Missing rows may appear as N/A."
+$npmBenchSummaries = if ($null -ne $npmBenchJson.summaries) {
+  @($npmBenchJson.summaries)
+} else {
+  @($npmBenchJson)
 }
-$wasmMap = Convert-NpmBenchToMap -NpmBenchJson $npmBenchJson
+foreach ($summary in $npmBenchSummaries) {
+  if (@($summary.skipped).Count -gt 0) {
+    $targetLabel = if ($summary.target) { [string]$summary.target } else { "unknown" }
+    Write-Warning "npm benchmark target '$targetLabel' reported skipped/errored tasks. Missing rows may appear as N/A."
+  }
+}
+$npmMaps = Convert-NpmBenchToMaps -NpmBenchJson $npmBenchJson
+$wasmMap = $npmMaps.WasmMap
+$regexMap = $npmMaps.RegexMap
 
 $existingDocument = if (Test-Path $resolvedOutputPath) {
-  Get-Content -Path $resolvedOutputPath -Raw
+  Get-Content -Path $resolvedOutputPath -Raw -Encoding UTF8
 } else {
   Get-DefaultPerformanceDocument
 }
@@ -518,8 +602,10 @@ $sectionMarkdown = Build-PerformanceSection `
   -VersionLabelValue $VersionLabel `
   -RustMap $rustMap `
   -WasmMap $wasmMap `
+  -RegexMap $regexMap `
   -PreviousRustMap $previousSectionData.RustMap `
   -PreviousWasmMap $previousSectionData.WasmMap `
+  -PreviousRegexMap $previousSectionData.RegexMap `
   -PreviousVersionLabel $previousSectionData.VersionLabel `
   -RustMeasurementTimeSecValue $RustMeasurementTimeSec `
   -RustWarmupTimeSecValue $RustWarmupTimeSec `
@@ -527,5 +613,6 @@ $sectionMarkdown = Build-PerformanceSection `
 
 $updatedDocument = Insert-SectionAfterMarker -DocumentText $existingDocument -SectionText $sectionMarkdown
 
-Set-Content -Path $resolvedOutputPath -Value $updatedDocument -Encoding UTF8
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($resolvedOutputPath, $updatedDocument, $utf8NoBom)
 Write-Host "Wrote performance report section to: $resolvedOutputPath"

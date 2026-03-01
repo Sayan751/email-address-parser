@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "es2019",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "declarationDir": "./dist/types",
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noEmit": false
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "tests",
+    "dist"
+  ]
+}

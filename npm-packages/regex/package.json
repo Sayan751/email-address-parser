@@ -1,0 +1,44 @@
+{
+  "name": "@sparser/email-address-parser-regex",
+  "description": "Regex-based RFC 5322 and RFC 6532 email address parser.",
+  "version": "3.0.0-rc.2",
+  "license": "MIT",
+  "author": {
+    "name": "Sayan751"
+  },
+  "keywords": [
+    "email-address",
+    "parser",
+    "regex",
+    "rfc 5322",
+    "rfc 6532"
+  ],
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sayan751/email-address-parser"
+  },
+  "type": "module",
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "types": "dist/types/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./email-regex": {
+      "types": "./dist/types/email-regex.d.ts",
+      "import": "./dist/email-regex.js"
+    }
+  },
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "tsc",
+    "test": "mocha --config ./tests/.mocharc.cjs"
+  }
+}

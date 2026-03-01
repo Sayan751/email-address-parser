@@ -47,13 +47,13 @@ jobs:
       run: wasm-pack test --headless --chrome # --firefox # Disabling tests in FF temporarily (refer: https://github.com/rustwasm/wasm-bindgen/issues/2261)
     
     - name: build WASM bundler
-      run: wasm-pack build --out-dir ../npm-pkg/dist/bundler --release
-    
+      run: wasm-pack build --out-dir ../npm-packages/wasm/dist/bundler --release
+
     - name: build WASM cjs
-      run: wasm-pack build --target nodejs --out-dir ../npm-pkg/dist/cjs --release
-    
+      run: wasm-pack build --target nodejs --out-dir ../npm-packages/wasm/dist/cjs --release
+
     - name: cleanup dist
-      run: rm ../npm-pkg/dist/bundler/.gitignore ../npm-pkg/dist/bundler/email_address_parser.d.ts ../npm-pkg/dist/bundler/LICENSE ../npm-pkg/dist/bundler/package.json  ../npm-pkg/dist/bundler/README.md ../npm-pkg/dist/cjs/.gitignore ../npm-pkg/dist/cjs/email_address_parser.d.ts ../npm-pkg/dist/cjs/LICENSE ../npm-pkg/dist/cjs/package.json  ../npm-pkg/dist/cjs/README.md
+      run: rm ../npm-packages/wasm/dist/bundler/.gitignore ../npm-packages/wasm/dist/bundler/email_address_parser.d.ts ../npm-packages/wasm/dist/bundler/LICENSE ../npm-packages/wasm/dist/bundler/package.json  ../npm-packages/wasm/dist/bundler/README.md ../npm-packages/wasm/dist/cjs/.gitignore ../npm-packages/wasm/dist/cjs/email_address_parser.d.ts ../npm-packages/wasm/dist/cjs/LICENSE ../npm-packages/wasm/dist/cjs/package.json  ../npm-packages/wasm/dist/cjs/README.md
 
     - uses: actions/setup-node@v1
       with:
@@ -61,13 +61,13 @@ jobs:
         registry-url: https://registry.npmjs.org/
         scope: sparser
 
-    - name: npm ci
+    - name: npm ci (workspace)
       run: npm ci
-      working-directory: ./npm-pkg
+      working-directory: ./npm-packages
 
-    - name: test npm package
-      run: npm test
-      working-directory: ./npm-pkg
+    - name: test wasm npm package
+      run: npm test --workspace wasm
+      working-directory: ./npm-packages
 
     # publish to crates.io
     - uses: rust-lang/crates-io-auth-action@v1
@@ -81,5 +81,38 @@ jobs:
     # publish to npm
     - name: publish to npm
       run: npm publish --access public --@sparser:registry=https://registry.npmjs.org/ --tag latest
-      working-directory: ./npm-pkg
+      working-directory: ./npm-packages/wasm
+      if: startsWith(github.ref, 'refs/tags/v')
+
+  regex:
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: npm-packages
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: echo github ref
+      run: echo "${{ github.ref }}"
+
+    - uses: actions/setup-node@v1
+      with:
+        node-version: '24.x'
+        registry-url: https://registry.npmjs.org/
+        scope: sparser
+
+    - name: npm ci (workspace)
+      run: npm ci
+
+    - name: build regex package
+      run: npm run build --workspace regex
+
+    - name: test regex package
+      run: npm test --workspace regex
+
+    - name: publish regex package to npm
+      run: npm publish --access public --@sparser:registry=https://registry.npmjs.org/ --tag latest
+      working-directory: ./npm-packages/regex
       if: startsWith(github.ref, 'refs/tags/v')

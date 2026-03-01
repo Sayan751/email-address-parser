@@ -1,5 +1,8 @@
 "use strict";
 
+const path = require("path");
+const { pathToFileURL } = require("url");
+
 const EMAIL = "foo@bar.com";
 const EMAIL_INVALID_LOCAL_PART = "foo-@bar.com";
 const EMAIL_INVALID_DOMAIN = "foo@-bar.com";
@@ -12,30 +15,62 @@ const DEFAULT_BENCH_OPTIONS = Object.freeze({
   warmupIterations: 5000,
   timeMs: 1000,
   format: "table",
+  target: "all",
 });
 
-async function loadBenchmarkTarget() {
-  const pkg = require("../dist/cjs/email_address_parser.js");
-  const label = "WASM";
+async function loadBenchmarkTarget(target) {
+  if (target === "wasm") {
+    const pkg = require(path.resolve(__dirname, "../wasm/dist/cjs/email_address_parser.js"));
+    const label = "WASM";
 
-  return {
-    label,
-    target: "wasm",
-    ...pkg,
-    releaseParsed(value) {
-      if (value && typeof value.free === "function") {
-        value.free();
-      }
-    },
-    releaseConstructed(value) {
-      if (value && typeof value.free === "function") {
-        value.free();
-      }
-    },
-    createLaxOptions(ParsingOptions) {
-      return new ParsingOptions(true);
-    },
-  };
+    return {
+      label,
+      target: "wasm",
+      ...pkg,
+      releaseParsed(value) {
+        if (value && typeof value.free === "function") {
+          value.free();
+        }
+      },
+      releaseConstructed(value) {
+        if (value && typeof value.free === "function") {
+          value.free();
+        }
+      },
+      createLaxOptions(ParsingOptions) {
+        return new ParsingOptions(true);
+      },
+    };
+  }
+
+  if (target === "regex") {
+    const regexEntry = path.resolve(__dirname, "../regex/dist/email-address-parser-regex.js");
+    let pkg;
+    try {
+      pkg = await import(pathToFileURL(regexEntry).href);
+    } catch (error) {
+      const reason = error && error.message ? error.message : String(error);
+      throw new Error(
+        `Failed to load regex benchmark target from '${regexEntry}'. ` +
+          "Run `npm run build --workspace regex` in `npm-packages` first. " +
+          `Original error: ${reason}`
+      );
+    }
+    const label = "REGEX";
+
+    return {
+      label,
+      target: "regex",
+      ...pkg,
+      releaseParsed(_value) {},
+      releaseConstructed(_value) {},
+      createLaxOptions(ParsingOptions) {
+        return new ParsingOptions(true);
+      },
+    };
+  }
+
+  throw new Error(`Unsupported target '${target}'.`);
 }
 
 function printUsage() {
@@ -46,6 +81,7 @@ function printUsage() {
   console.log("  --warmup-iterations <n>  Warmup iterations per task (default: 5000)");
   console.log("  --time-ms <n>            Time budget per task in ms (default: 1000)");
   console.log("  --format <table|json>    Output format (default: table)");
+  console.log("  --target <wasm|regex|all> Benchmark target(s) (default: all)");
   console.log("  --json                   Shortcut for --format json");
   console.log("  --help                   Show this help");
 }
@@ -84,6 +120,19 @@ function parseBenchArgs(argv) {
         throw new Error(`Invalid value for ${arg}: '${value}'`);
       }
       options.format = normalized;
+      continue;
+    }
+
+    if (arg === "--target") {
+      const value = argv[++i];
+      if (value === undefined) {
+        throw new Error(`Missing value for ${arg}`);
+      }
+      const normalized = value.toLowerCase();
+      if (normalized !== "wasm" && normalized !== "regex" && normalized !== "all") {
+        throw new Error(`Invalid value for ${arg}: '${value}'`);
+      }
+      options.target = normalized;
       continue;
     }
 
@@ -320,11 +369,12 @@ function addTasks(bench, target, runtime, EmailAddress, ParsingOptions) {
     });
 }
 
-async function runSuite(target, benchOptions) {
+async function runSuite(target, benchOptions, outputFormat) {
   const { Bench } = await import("tinybench");
-  const runtime = await loadBenchmarkTarget();
+  const runtime = await loadBenchmarkTarget(target);
   const { EmailAddress, ParsingOptions } = runtime;
-  const { iterations, warmupIterations, timeMs, format } = benchOptions;
+  const { iterations, warmupIterations, timeMs } = benchOptions;
+  const format = outputFormat ?? benchOptions.format;
 
   const bench = new Bench({
     iterations,
@@ -347,14 +397,33 @@ async function runSuite(target, benchOptions) {
 }
 
 async function main() {
-  const target = "wasm";
   const args = parseBenchArgs(process.argv.slice(2));
   if (args.help) {
     printUsage();
     return;
   }
 
-  await runSuite(target, args);
+  const targets = args.target === "all" ? ["wasm", "regex"] : [args.target];
+  const aggregateJson = args.format === "json" && targets.length > 1;
+  const summaries = [];
+
+  for (const target of targets) {
+    const summary = await runSuite(target, args, aggregateJson ? "silent" : args.format);
+    summaries.push(summary);
+  }
+
+  if (aggregateJson) {
+    console.log(
+      JSON.stringify(
+        {
+          tool: "tinybench",
+          summaries,
+        },
+        null,
+        2
+      )
+    );
+  }
 }
 
 main().catch((err) => {
