@@ -15,8 +15,7 @@
     "declaration": true,
     "declarationMap": false,
     "sourceMap": false,
-    "noEmit": false,
-    "allowImportingTsExtensions": true
+    "noEmit": false
   },
   "include": [
     "src/**/*.ts"

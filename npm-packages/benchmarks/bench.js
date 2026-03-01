@@ -44,7 +44,7 @@ async function loadBenchmarkTarget(target) {
   }
 
   if (target === "regex") {
-    const regexEntry = path.resolve(__dirname, "../regex/dist/email-address-parser-regex.js");
+    const regexEntry = path.resolve(__dirname, "../regex/dist/index.js");
     let pkg;
     try {
       pkg = await import(pathToFileURL(regexEntry).href);

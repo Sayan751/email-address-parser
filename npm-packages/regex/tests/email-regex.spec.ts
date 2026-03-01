@@ -6,14 +6,15 @@ import { fileURLToPath } from "url";
 import {
   DOMAIN_REGEX_LAX,
   DOMAIN_REGEX_STRICT,
+  EmailAddress,
   EMAIL_REGEX_LAX,
   EMAIL_REGEX_STRICT,
   LOCAL_PART_REGEX_LAX,
   LOCAL_PART_REGEX_STRICT,
+  ParsingOptions,
   isValidEmail,
   parseEmail,
-} from "../src/email-regex.ts";
-import { EmailAddress, ParsingOptions } from "../src/email-address-parser-regex.ts";
+} from "../src/index.ts";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
